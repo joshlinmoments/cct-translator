@@ -852,16 +852,106 @@
     div.setAttribute('contenteditable', 'false');
     const newText = div.innerText.trim();
     if (!newText || newText === row.baihuan) {
-      // No change — restore onclick
       div.setAttribute('onclick', `makeZhEditable(${id})`);
       return;
     }
     row.baihuan = newText;
-    // Re-render with updated text and onclick
     const cell = document.getElementById(`zh-cell-${id}`);
     if (cell) cell.innerHTML = `<div class="cell-text chinese-text" onclick="makeZhEditable(${id})" title="Click to edit">${escHtml(newText)}</div>`;
     writeRowToFirebase(id, { source: row.source, baihuan: newText, en: row.en, displayNum: row.displayNum, streaming: false });
-    setStatus('ready', 'Chinese text saved');
+    setStatus('ready', 'Chinese saved — updating English…');
+
+    // Auto re-translate English from the updated Modern Chinese text
+    if (apiKey) retranslateEnglishForRow(id, newText, row);
+  }
+
+  async function retranslateEnglishForRow(id, baihuanText, row) {
+    const enCell = document.getElementById(`en-cell-${id}`);
+    if (!enCell) return;
+    enCell.innerHTML = '<div class="cell-spinner"><div class="row-spinner"></div></div>';
+    setStatus('loading', 'Updating English…');
+
+    const abort = new AbortController();
+    try {
+      await streamEnglishOnly(baihuanText, abort.signal,
+        text => {
+          enCell.innerHTML = `<div class="cell-text english-text">${escHtml(text)}<span class="streaming-cursor"></span></div>`;
+          writeRowToFirebase(id, { source: row.source, baihuan: row.baihuan, en: text, displayNum: row.displayNum, streaming: true });
+        },
+        finalText => {
+          row.en = finalText;
+          enCell.innerHTML = `<div class="cell-text english-text">${escHtml(finalText)}</div>`;
+          writeRowToFirebase(id, { source: row.source, baihuan: row.baihuan, en: finalText, displayNum: row.displayNum, streaming: false });
+          setStatus('ready', 'English updated');
+        }
+      );
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      enCell.innerHTML = `<div class="cell-text english-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Translation failed</div>`;
+      setStatus('error', `Error: ${err.message}`);
+    }
+  }
+
+  async function streamEnglishOnly(text, signal, onChunk, onDone) {
+    const sys = 'Translate the following Modern Chinese text into natural, fluent English. Output only the English translation, nothing else.';
+    let res;
+
+    if (provider === 'openrouter') {
+      res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://localhost', 'X-Title': 'Tao Seminar Real-Time Translator' },
+        body: JSON.stringify({ model, stream: true, max_tokens: 1024, messages: [{ role: 'system', content: sys }, { role: 'user', content: text }] }),
+        signal
+      });
+    } else if (provider === 'gemini') {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: [{ text }] }], generationConfig: { maxOutputTokens: 1024 } }),
+        signal
+      });
+    } else {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model, max_tokens: 1024, stream: true, system: sys, messages: [{ role: 'user', content: text }] }),
+        signal
+      });
+    }
+
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+
+    const reader = res.body.getReader(), decoder = new TextDecoder();
+    let buf = '', full = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') { onDone(full); return; }
+        try {
+          const evt = JSON.parse(data);
+          let chunk, done2 = false;
+          if (provider === 'gemini') {
+            chunk = evt.candidates?.[0]?.content?.parts?.[0]?.text;
+            done2 = evt.candidates?.[0]?.finishReason === 'STOP';
+          } else if (provider === 'anthropic') {
+            if (evt.type === 'content_block_delta') chunk = evt.delta?.text;
+            done2 = evt.type === 'message_stop';
+          } else {
+            chunk = evt.choices?.[0]?.delta?.content;
+            done2 = evt.choices?.[0]?.finish_reason === 'stop';
+          }
+          if (chunk) { full += chunk; onChunk(full); }
+          if (done2) { onDone(full); return; }
+        } catch (_) {}
+      }
+    }
+    onDone(full);
   }
 
   // ── Edit completed row ──
