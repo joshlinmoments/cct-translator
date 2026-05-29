@@ -474,6 +474,12 @@
       </select>
     </div>
 
+    <div class="field">
+      <label>Firebase 即時同步 URL <span style="font-weight:normal;color:#bbb;text-transform:none;">（選填）</span></label>
+      <input type="text" id="firebase-url-input" placeholder="https://your-project-default-rtdb.firebaseio.com" />
+      <div class="api-note">設定後所有訪客可即時看到你的翻譯串流。前往 <strong>console.firebase.google.com</strong> → Realtime Database（測試模式）取得網址。</div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSettings()">取消</button>
       <button class="btn-save" onclick="saveSettings()">儲存設定</button>
@@ -487,6 +493,14 @@
   let apiKey   = localStorage.getItem('cct_api_key')  || '';
   let model    = localStorage.getItem('cct_model')    || 'google/gemini-2.0-flash-exp:free';
   let style    = localStorage.getItem('cct_style')    || 'scholarly';
+
+  // ── Firebase (hardcoded URL visible to all visitors) ──
+  const FIREBASE_URL = ''; // ← 取得 Firebase URL 後填入此處
+  let firebaseUrl = localStorage.getItem('cct_firebase') || FIREBASE_URL;
+  let fbSource    = null;  // EventSource subscription
+  let fbThrottle  = null;  // throttle timer
+  let fbBatch     = null;  // pending write payload
+
   let debounceTimer    = null;
   let currentAbort     = null;
   let currentMode      = 'browse';
@@ -528,6 +542,53 @@
     ]
   };
 
+  // ── Firebase sync ──
+  function initFirebase() {
+    if (fbSource) { fbSource.close(); fbSource = null; }
+    if (!firebaseUrl) return;
+
+    fbSource = new EventSource(`${firebaseUrl}/current.json?alt=sse`);
+
+    fbSource.addEventListener('put', e => {
+      try {
+        const { data } = JSON.parse(e.data);
+        if (!data) return;
+        if (currentAbort) return; // Josh 正在翻譯時不覆蓋本機
+        const { input, baihuan, english, streaming } = data;
+        if (input   !== undefined) document.getElementById('input-text').value = input || '';
+        if (baihuan !== undefined) setOutput('baihuan-output', baihuan || '', !!streaming);
+        if (english !== undefined) setOutput('english-output', english || '', false);
+        setStatus('ready', streaming ? '直播翻譯中…' : '就緒');
+      } catch (_) {}
+    });
+
+    fbSource.addEventListener('patch', e => {
+      try {
+        const { data } = JSON.parse(e.data);
+        if (!data || currentAbort) return;
+        const { baihuan, english, streaming } = data;
+        if (baihuan !== undefined) setOutput('baihuan-output', baihuan, !!streaming);
+        if (english !== undefined) setOutput('english-output', english, false);
+      } catch (_) {}
+    });
+  }
+
+  // Only Josh's device (has apiKey) writes; visitors are read-only
+  function writeToFirebase(data) {
+    if (!firebaseUrl || !apiKey) return;
+    fbBatch = { ...(fbBatch || {}), ...data };
+    if (fbThrottle) return; // already scheduled
+    fbThrottle = setTimeout(() => {
+      fbThrottle = null;
+      const payload = fbBatch; fbBatch = null;
+      fetch(`${firebaseUrl}/current.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    }, 400);
+  }
+
   // ── Init ──
   window.onload = () => {
     setMode('browse');
@@ -535,8 +596,11 @@
     document.getElementById('provider-select').value = provider;
     document.getElementById('model-select').value    = model;
     updateProviderLabels(provider);
+    initFirebase();
     if (apiKey) {
       setStatus('ready', '就緒');
+    } else if (firebaseUrl) {
+      setStatus('ready', '已連線，等待翻譯…');
     } else {
       openSettings();
     }
@@ -644,14 +708,18 @@
     setStatus('loading', '翻譯中…');
     setOutput('baihuan-output', null, true, true);
     setOutput('english-output', null, true, true);
+    writeToFirebase({ input: text, baihuan: '', english: '', streaming: true });
+
+    const onProgress = ({ bh, en, streaming }) =>
+      writeToFirebase({ input: text, baihuan: bh, english: en, streaming });
 
     try {
       if (provider === 'openrouter') {
-        await translateOpenRouter(text, currentAbort.signal);
+        await translateOpenRouter(text, currentAbort.signal, onProgress);
       } else if (provider === 'gemini') {
-        await translateGemini(text, currentAbort.signal);
+        await translateGemini(text, currentAbort.signal, onProgress);
       } else {
-        await translateAnthropic(text, currentAbort.signal);
+        await translateAnthropic(text, currentAbort.signal, onProgress);
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -662,7 +730,7 @@
   }
 
   // ── Anthropic Claude ──
-  async function translateAnthropic(text, signal) {
+  async function translateAnthropic(text, signal, onProgress) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -690,14 +758,14 @@
       try {
         const evt = JSON.parse(chunk);
         if (evt.type === 'content_block_delta' && evt.delta?.text) return evt.delta.text;
-        if (evt.type === 'message_stop') return null; // signals done
+        if (evt.type === 'message_stop') return null;
       } catch (_) {}
-      return undefined; // skip
-    });
+      return undefined;
+    }, onProgress);
   }
 
   // ── Google Gemini ──
-  async function translateGemini(text, signal) {
+  async function translateGemini(text, signal, onProgress) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
@@ -723,11 +791,11 @@
         if (evt.candidates?.[0]?.finishReason === 'STOP') return null;
       } catch (_) {}
       return undefined;
-    });
+    }, onProgress);
   }
 
   // ── OpenRouter (OpenAI-compatible) ──
-  async function translateOpenRouter(text, signal) {
+  async function translateOpenRouter(text, signal, onProgress) {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -762,17 +830,26 @@
         if (evt.choices?.[0]?.finish_reason === 'stop') return null;
       } catch (_) {}
       return undefined;
-    });
+    }, onProgress);
   }
 
   // ── Generic SSE reader ──
-  // parser(rawData) → string (append text) | null (done) | undefined (skip)
-  async function readSSEStream(res, parser) {
+  // parser(rawData) → string | null (done) | undefined (skip)
+  // onProgress({ bh, en, streaming }) — optional Firebase callback
+  async function readSSEStream(res, parser, onProgress) {
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
     let sseBuffer = '';
     let fullText  = '';
     let prevBh = '', prevEn = '';
+
+    const finish = () => {
+      const { bh, en } = parseSections(fullText);
+      setOutput('baihuan-output', bh, false);
+      setOutput('english-output', en, false);
+      if (onProgress) onProgress({ bh, en, streaming: false });
+      setStatus('ready', '翻譯完成 ✓');
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -788,28 +865,18 @@
         if (data === '[DONE]') continue;
 
         const result = parser(data);
-        if (result === null) {
-          // stream complete — final render
-          const { bh, en } = parseSections(fullText);
-          setOutput('baihuan-output', bh, false);
-          setOutput('english-output', en, false);
-          setStatus('ready', '翻譯完成 ✓');
-          return;
-        }
+        if (result === null) { finish(); return; }
         if (result !== undefined) {
           fullText += result;
           const { bh, bhDone, en, enDone } = parseSections(fullText);
           if (bh !== prevBh) { prevBh = bh; setOutput('baihuan-output', bh, !bhDone); }
           if (en !== prevEn) { prevEn = en; setOutput('english-output',  en, !enDone); }
+          if (onProgress) onProgress({ bh, en, streaming: true });
         }
       }
     }
 
-    // Fallback final render if stream ended without explicit stop event
-    const { bh, en } = parseSections(fullText);
-    setOutput('baihuan-output', bh, false);
-    setOutput('english-output', en, false);
-    setStatus('ready', '翻譯完成 ✓');
+    finish(); // fallback if stream ends without explicit stop
   }
 
   // ── Baihuan manual edit → English only ──
@@ -931,6 +998,9 @@
           if (isDone) {
             setOutput('english-output', fullText, false);
             setStatus('ready', '英文翻譯已更新 ✓');
+            const bh = document.getElementById('baihuan-output').innerText.trim();
+            const inp = document.getElementById('input-text').value.trim();
+            writeToFirebase({ input: inp, baihuan: bh, english: fullText, streaming: false });
             return;
           }
         }
@@ -938,6 +1008,9 @@
 
       setOutput('english-output', fullText, false);
       setStatus('ready', '英文翻譯已更新 ✓');
+      const bh2 = document.getElementById('baihuan-output').innerText.trim();
+      const inp2 = document.getElementById('input-text').value.trim();
+      writeToFirebase({ input: inp2, baihuan: bh2, english: fullText, streaming: false });
 
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -991,11 +1064,12 @@
 
   // ── Settings ──
   function openSettings() {
-    document.getElementById('provider-select').value = provider;
-    document.getElementById('api-key-input').value   = apiKey;
+    document.getElementById('provider-select').value  = provider;
+    document.getElementById('api-key-input').value    = apiKey;
     renderModelOptions(provider);
-    document.getElementById('model-select').value    = model;
-    document.getElementById('style-select').value    = style;
+    document.getElementById('model-select').value     = model;
+    document.getElementById('style-select').value     = style;
+    document.getElementById('firebase-url-input').value = firebaseUrl;
     updateProviderLabels(provider);
     document.getElementById('settings-overlay').classList.add('open');
   }
@@ -1006,23 +1080,31 @@
 
   function saveSettings() {
     const k = document.getElementById('api-key-input').value.trim();
-    if (!k) { alert('請輸入有效的 API Key'); return; }
+    const fb = document.getElementById('firebase-url-input').value.trim().replace(/\/$/, '');
+    if (!k && !fb) { alert('請輸入 API Key 或 Firebase URL'); return; }
+
+    if (k) { apiKey = k; localStorage.setItem('cct_api_key', apiKey); }
     provider = document.getElementById('provider-select').value;
-    apiKey   = k;
     const selectedModel = document.getElementById('model-select').value;
     model = selectedModel === '__custom__'
       ? document.getElementById('custom-model-input').value.trim()
       : selectedModel;
-    if (!model) { alert('請輸入自訂模型 ID'); return; }
+    if (k && !model) { alert('請輸入自訂模型 ID'); return; }
     style = document.getElementById('style-select').value;
     localStorage.setItem('cct_provider', provider);
-    localStorage.setItem('cct_api_key',  apiKey);
     localStorage.setItem('cct_model',    model);
     localStorage.setItem('cct_style',    style);
+
+    if (fb !== firebaseUrl) {
+      firebaseUrl = fb;
+      localStorage.setItem('cct_firebase', firebaseUrl);
+      initFirebase();
+    }
+
     closeSettings();
     setStatus('ready', '設定已儲存，就緒');
     const t = document.getElementById('input-text').value.trim();
-    if (t) translate(t);
+    if (t && apiKey) translate(t);
   }
 
   // Click overlay to close
