@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tao Seminar Translator — Classical Chinese</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231C1B18'/><text x='16' y='23' font-family='Georgia,serif' font-size='17' fill='%23F5F2EC' text-anchor='middle'>道</text></svg>">
+  <title>Tao Seminar Real-Time Translator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231C1B18'/><text x='16' y='20' font-family='Georgia,serif' font-size='17' fill='%23F5F2EC' text-anchor='middle'>文</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -594,7 +594,7 @@
       </svg>
     </div>
     <div class="header-titles">
-      <div class="title">Tao Seminar Translator</div>
+      <div class="title">Tao Seminar Real-Time Translator</div>
       <div class="subtitle">Classical Chinese AI Translation</div>
     </div>
   </div>
@@ -773,6 +773,12 @@
   let baihuanEdited = false;
   let enOnlyTimer   = null;
   let enOnlyAbort   = null;
+
+  // ── Incremental translation cache ──
+  // Avoids re-translating text that was already processed
+  let lastTranslated = '';  // full text of last completed translation
+  let cachedBh       = '';  // baihuan result for lastTranslated
+  let cachedEn       = '';  // english result for lastTranslated
 
   // ── Panel visibility ──
   let panels = { input: true, baihuan: true, english: true };
@@ -968,20 +974,91 @@
     if (!text) {
       resetOutputs();
       setStatus('ready', 'Ready');
+      lastTranslated = ''; cachedBh = ''; cachedEn = '';
       return;
     }
+
+    // Detect pure append: new text is an extension of the last translated text
+    const isAppend = lastTranslated.length >= 10 && text.startsWith(lastTranslated);
+    const appendPart = isAppend ? text.slice(lastTranslated.length).trim() : '';
+
+    if (isAppend && !appendPart) return; // no new content yet
 
     setStatus('loading', 'Waiting…');
 
     debounceTimer = setTimeout(() => {
       if (!apiKey) { openSettings(); return; }
-      translate(text);
+      if (isAppend && appendPart) {
+        translateAppend(appendPart, text);
+      } else {
+        lastTranslated = ''; cachedBh = ''; cachedEn = '';
+        translate(text, (bh, en) => {
+          lastTranslated = text;
+          cachedBh = bh;
+          cachedEn = en;
+        });
+      }
     }, 750);
   }
 
   function resetOutputs() {
     setOutput('baihuan-output', null, false);
     setOutput('english-output', null, false);
+  }
+
+  // ── Append-only incremental translation ──
+  async function translateAppend(newPart, fullText) {
+    baihuanEdited = false;
+    if (enOnlyAbort) { enOnlyAbort.abort(); enOnlyAbort = null; }
+    if (currentAbort) currentAbort.abort();
+    currentAbort = new AbortController();
+
+    setStatus('loading', 'Translating new segment…');
+    if (isMobile()) activateTab('baihuan');
+
+    // Show cached content immediately while the new part streams in
+    if (cachedBh) setOutput('baihuan-output', cachedBh, true);
+    if (cachedEn) setOutput('english-output', cachedEn, false);
+
+    let newBh = '', newEn = '';
+
+    // Custom renderer: prepend cached content in front of the streaming new part
+    const esc = s => s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
+    const appendRenderer = (id, text, streaming) => {
+      const el = document.getElementById(id);
+      if (id === 'baihuan-output') {
+        const prefix = cachedBh ? esc(cachedBh) + (text ? '<br><br>' : '') : '';
+        el.innerHTML = prefix + esc(text) + (streaming ? '<span class="cursor"></span>' : '');
+      } else {
+        const prefix = cachedEn ? esc(cachedEn) + (text ? '<br><br>' : '') : '';
+        el.innerHTML = prefix + esc(text);
+      }
+    };
+
+    const onProgress = ({ bh, en, streaming }) => {
+      newBh = bh; newEn = en;
+      const combinedBh = cachedBh ? cachedBh + '\n\n' + bh : bh;
+      const combinedEn = cachedEn ? cachedEn + '\n\n' + en : en;
+      writeToFirebase({ input: fullText, baihuan: combinedBh, english: combinedEn, streaming });
+    };
+
+    try {
+      if (provider === 'openrouter') {
+        await translateOpenRouter(newPart, currentAbort.signal, onProgress, appendRenderer);
+      } else if (provider === 'gemini') {
+        await translateGemini(newPart, currentAbort.signal, onProgress, appendRenderer);
+      } else {
+        await translateAnthropic(newPart, currentAbort.signal, onProgress, appendRenderer);
+      }
+
+      cachedBh = cachedBh ? cachedBh + '\n\n' + newBh : newBh;
+      cachedEn = cachedEn ? cachedEn + '\n\n' + newEn : newEn;
+      lastTranslated = fullText;
+      setStatus('ready', 'Done');
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      setStatus('error', `Error: ${err.message}`);
+    }
   }
 
   // ── System prompt ──
@@ -1010,7 +1087,7 @@
   }
 
   // ── Streaming translation ──
-  async function translate(text) {
+  async function translate(text, onDone = null) {
     baihuanEdited = false;
     if (enOnlyAbort) { enOnlyAbort.abort(); enOnlyAbort = null; }
     if (currentAbort) currentAbort.abort();
@@ -1022,8 +1099,10 @@
     writeToFirebase({ input: text, baihuan: '', english: '', streaming: true });
     if (isMobile()) activateTab('baihuan');
 
-    const onProgress = ({ bh, en, streaming }) =>
+    const onProgress = ({ bh, en, streaming }) => {
+      if (!streaming && onDone) onDone(bh, en);
       writeToFirebase({ input: text, baihuan: bh, english: en, streaming });
+    };
 
     try {
       if (provider === 'openrouter') {
@@ -1042,7 +1121,7 @@
   }
 
   // ── Anthropic Claude ──
-  async function translateAnthropic(text, signal, onProgress) {
+  async function translateAnthropic(text, signal, onProgress, renderer = null) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -1071,11 +1150,11 @@
         if (evt.type === 'message_stop') return null;
       } catch (_) {}
       return undefined;
-    }, onProgress);
+    }, onProgress, renderer);
   }
 
   // ── Google Gemini ──
-  async function translateGemini(text, signal, onProgress) {
+  async function translateGemini(text, signal, onProgress, renderer = null) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
@@ -1101,11 +1180,11 @@
         if (evt.candidates?.[0]?.finishReason === 'STOP') return null;
       } catch (_) {}
       return undefined;
-    }, onProgress);
+    }, onProgress, renderer);
   }
 
   // ── OpenRouter ──
-  async function translateOpenRouter(text, signal, onProgress) {
+  async function translateOpenRouter(text, signal, onProgress, renderer = null) {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -1138,21 +1217,25 @@
         if (evt.choices?.[0]?.finish_reason === 'stop') return null;
       } catch (_) {}
       return undefined;
-    }, onProgress);
+    }, onProgress, renderer);
   }
 
   // ── Generic SSE reader ──
-  async function readSSEStream(res, parser, onProgress) {
+  async function readSSEStream(res, parser, onProgress, renderer = null) {
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
     let sseBuffer = '';
     let fullText  = '';
     let prevBh = '', prevEn = '';
 
+    // renderer replaces setOutput for append mode; null = use default setOutput
+    const render = (id, text, streaming) =>
+      renderer ? renderer(id, text, streaming) : setOutput(id, text, streaming);
+
     const finish = () => {
       const { bh, en } = parseSections(fullText);
-      setOutput('baihuan-output', bh, false);
-      setOutput('english-output', en, false);
+      render('baihuan-output', bh, false);
+      render('english-output', en, false);
       if (onProgress) onProgress({ bh, en, streaming: false });
       setStatus('ready', 'Done');
     };
@@ -1175,8 +1258,8 @@
         if (result !== undefined) {
           fullText += result;
           const { bh, bhDone, en, enDone } = parseSections(fullText);
-          if (bh !== prevBh) { prevBh = bh; setOutput('baihuan-output', bh, !bhDone); }
-          if (en !== prevEn) { prevEn = en; setOutput('english-output',  en, !enDone); }
+          if (bh !== prevBh) { prevBh = bh; render('baihuan-output', bh, !bhDone); }
+          if (en !== prevEn) { prevEn = en; render('english-output',  en, !enDone); }
           if (onProgress) onProgress({ bh, en, streaming: true });
         }
       }
