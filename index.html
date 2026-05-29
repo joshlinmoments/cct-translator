@@ -15,27 +15,17 @@
       --hdr-bg:    #EDEAE3;
       --border:    rgba(40,30,20,0.10);
       --shadow:    0 1px 2px rgba(30,20,10,0.06), 0 2px 8px rgba(30,20,10,0.04);
-
       --text-1:    #1A1815;
       --text-2:    #58524A;
       --text-3:    #A09890;
-
       --accent:    #1C1B18;
       --accent-w:  #C05020;
-      --accent-lt: #F5E8DC;
-
       --dot-ready:   #4D8C5A;
       --dot-loading: #C05020;
       --dot-error:   #C03030;
-
-      --r-sm:   8px;
-      --r-md:   14px;
-      --r-lg:   20px;
-      --r-pill: 999px;
-
+      --r-sm: 8px; --r-md: 14px; --r-lg: 20px; --r-pill: 999px;
       --sans:  'Plus Jakarta Sans', -apple-system, 'Helvetica Neue', sans-serif;
       --serif: 'Hiragino Mincho ProN', 'Songti SC', 'Noto Serif TC', Georgia, serif;
-
       --content-font: 16px;
     }
 
@@ -63,34 +53,17 @@
       border-bottom: 1px solid var(--border);
       box-shadow: var(--shadow);
     }
-
     .header-left { display: flex; align-items: center; gap: 10px; }
-
     .logo-mark {
       width: 34px; height: 34px;
       background: var(--accent);
       border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      color: var(--panel);
+      flex-shrink: 0; color: var(--panel);
     }
-
     .header-titles { display: flex; flex-direction: column; gap: 1px; }
-
-    .title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      color: var(--text-1);
-      line-height: 1.2;
-    }
-
-    .subtitle {
-      font-size: 11px;
-      color: var(--text-3);
-      font-weight: 400;
-    }
-
+    .title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-1); line-height: 1.2; }
+    .subtitle { font-size: 11px; color: var(--text-3); font-weight: 400; }
     .header-right { display: flex; align-items: center; gap: 8px; }
 
     .mode-toggle {
@@ -98,486 +71,307 @@
       background: var(--hdr-bg);
       border: 1px solid var(--border);
       border-radius: var(--r-pill);
-      padding: 3px;
-      gap: 2px;
+      padding: 3px; gap: 2px;
     }
-
     .mode-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-3);
-      padding: 5px 13px;
-      border-radius: var(--r-pill);
-      cursor: pointer;
-      font-size: 12px;
-      font-family: var(--sans);
-      font-weight: 600;
-      transition: all 0.18s;
-      white-space: nowrap;
+      background: transparent; border: none;
+      color: var(--text-3); padding: 5px 13px;
+      border-radius: var(--r-pill); cursor: pointer;
+      font-size: 12px; font-family: var(--sans); font-weight: 600;
+      transition: all 0.18s; white-space: nowrap;
       display: flex; align-items: center; gap: 5px;
     }
-    .mode-btn.active {
-      background: var(--accent);
-      color: var(--panel);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-    }
+    .mode-btn.active { background: var(--accent); color: var(--panel); box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
     .mode-btn:hover:not(.active) { color: var(--text-2); }
 
     .settings-btn {
-      background: transparent;
-      border: 1.5px solid var(--border);
-      color: var(--text-2);
-      padding: 6px 15px;
-      border-radius: var(--r-pill);
-      cursor: pointer;
-      font-size: 12px;
-      font-family: var(--sans);
-      font-weight: 600;
-      transition: all 0.18s;
-      display: flex; align-items: center; gap: 6px;
+      background: transparent; border: 1.5px solid var(--border);
+      color: var(--text-2); padding: 6px 15px;
+      border-radius: var(--r-pill); cursor: pointer;
+      font-size: 12px; font-family: var(--sans); font-weight: 600;
+      transition: all 0.18s; display: flex; align-items: center; gap: 6px;
     }
-    .settings-btn:hover {
-      background: var(--hdr-bg);
-      border-color: rgba(40,30,20,0.20);
-      color: var(--text-1);
+    .settings-btn:hover { background: var(--hdr-bg); border-color: rgba(40,30,20,0.20); color: var(--text-1); }
+
+    /* ── Main: row table ── */
+    .main {
+      flex: 1; overflow: hidden;
+      padding: 10px; background: var(--bg);
     }
 
-    /* ── Three-panel grid ── */
-    .main {
+    .table-wrap {
+      height: 100%; display: flex; flex-direction: column;
+      background: var(--panel);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .table-hdr {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      flex: 1;
-      overflow: hidden;
-      gap: 10px;
-      padding: 10px;
-      background: var(--bg);
-    }
-
-    .panel {
-      display: flex;
-      flex-direction: column;
-      border-radius: var(--r-md);
-      overflow: hidden;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-
-    .panel-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
       background: var(--hdr-bg);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
+
+    .col-hdr {
+      padding: 11px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-right: 1px solid var(--border);
+    }
+    .col-hdr:last-child { border-right: none; }
+    .col-hdr-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px; color: var(--text-1); flex: 1; }
 
     .icon-wrap {
-      width: 26px; height: 26px;
-      border-radius: 6px;
+      width: 24px; height: 24px; border-radius: 6px;
       background: rgba(40,30,20,0.10);
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      color: var(--text-2);
+      flex-shrink: 0; color: var(--text-2);
     }
-
-    .panel-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-1);
-      letter-spacing: 0.2px;
-      flex: 1;
-      text-transform: uppercase;
-    }
-
     .badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: var(--r-pill);
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      background: rgba(40,30,20,0.08);
-      color: var(--text-2);
+      font-size: 10px; padding: 2px 8px;
+      border-radius: var(--r-pill); font-weight: 600;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      background: rgba(40,30,20,0.08); color: var(--text-2);
     }
 
-    textarea {
-      flex: 1;
-      border: none;
-      outline: none;
-      resize: none;
-      padding: 22px 20px;
-      font-size: var(--content-font);
-      line-height: 1.9;
-      font-family: var(--serif);
-      background: var(--panel);
-      color: var(--text-1);
-      letter-spacing: 1.5px;
-      caret-color: var(--accent-w);
-    }
-
-    textarea::placeholder {
-      color: var(--text-3);
-      font-size: 14px;
-      letter-spacing: 0;
-      font-style: italic;
-      font-family: var(--sans);
-    }
-
-    .output-scroll {
-      flex: 1;
-      overflow-y: auto;
-      background: var(--panel);
+    .rows-scroll {
+      flex: 1; overflow-y: auto;
       scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
+      scrollbar-color: rgba(40,30,20,0.12) transparent;
     }
-    .output-scroll::-webkit-scrollbar { width: 4px; }
-    .output-scroll::-webkit-scrollbar-thumb {
-      background: rgba(40,30,20,0.12);
-      border-radius: 2px;
-    }
+    .rows-scroll::-webkit-scrollbar { width: 4px; }
+    .rows-scroll::-webkit-scrollbar-thumb { background: rgba(40,30,20,0.12); border-radius: 2px; }
 
-    .output-content {
-      padding: 22px 20px;
+    /* ── Rows ── */
+    .tr-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      min-height: 60px;
+    }
+    .tr-row:last-child { border-bottom: none; }
+    .tr-row.active { background: #FFFDF8; }
+    .tr-row.done {}
+    .tr-row.loading { opacity: 0.95; }
+    .tr-row.error .cell-source { background: rgba(192,48,48,0.04); }
+
+    .cell {
+      border-right: 1px solid var(--border);
+      overflow: hidden; position: relative;
+    }
+    .cell:last-child { border-right: none; }
+
+    .cell-text {
+      padding: 14px 18px;
       font-size: var(--content-font);
-      line-height: 2;
-      white-space: pre-wrap;
-      word-break: normal;
-      overflow-wrap: break-word;
-      min-height: 100%;
-      letter-spacing: 0.3px;
-      font-family: var(--serif);
+      line-height: 1.75;
       color: var(--text-1);
+      word-break: break-word;
+      white-space: pre-wrap;
     }
+    .source-text  { font-family: var(--serif); letter-spacing: 1px; }
+    .chinese-text { font-family: var(--serif); }
+    .english-text { font-family: var(--sans); }
 
-    #english-output {
-      font-family: var(--sans);
+    /* Active row textarea */
+    .tr-row.active .cell-source textarea {
+      width: 100%; min-height: 60px;
+      border: none; outline: none; resize: none;
+      padding: 14px 18px 28px;
       font-size: var(--content-font);
-      line-height: 1.85;
-      letter-spacing: 0;
-      font-weight: 400;
+      font-family: var(--serif); letter-spacing: 1px;
+      background: transparent; color: var(--text-1);
+      caret-color: var(--accent-w); line-height: 1.75;
+      display: block;
+    }
+    .tr-row.active .cell-source textarea::placeholder {
+      color: var(--text-3); font-style: italic;
+      font-size: 13px; letter-spacing: 0; font-family: var(--sans);
     }
 
-    .placeholder {
-      color: var(--text-3);
-      font-style: italic;
-      font-size: 14px;
-      letter-spacing: 0;
+    .row-num {
+      position: absolute; top: 5px; left: 6px;
+      font-size: 9px; color: var(--text-3);
+      font-family: var(--sans); font-weight: 600;
+      user-select: none; line-height: 1;
+    }
+
+    .enter-hint {
+      position: absolute; bottom: 6px; right: 8px;
+      font-size: 9px; color: var(--text-3);
       font-family: var(--sans);
+      background: var(--hdr-bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 6px;
+      user-select: none; pointer-events: none; letter-spacing: 0.2px;
     }
 
-    .loading-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-2);
-      font-size: 13px;
-      font-family: var(--sans);
-      font-weight: 500;
+    .cell-spinner {
+      display: flex; align-items: center;
+      padding: 14px 18px; gap: 8px;
+      color: var(--text-3); font-size: 12px; font-family: var(--sans);
     }
-
-    .spinner {
-      width: 15px; height: 15px;
-      border: 2px solid rgba(40,30,20,0.12);
+    .row-spinner {
+      width: 13px; height: 13px;
+      border: 2px solid rgba(40,30,20,0.10);
       border-top-color: var(--accent-w);
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-      flex-shrink: 0;
+      border-radius: 50%; animation: spin 0.75s linear infinite; flex-shrink: 0;
     }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .cursor {
-      display: inline-block;
-      width: 2px;
-      height: 1.1em;
-      background: var(--accent-w);
-      vertical-align: text-bottom;
-      margin-left: 2px;
-      border-radius: 1px;
+    .streaming-cursor {
+      display: inline-block; width: 2px; height: 1.1em;
+      background: var(--accent-w); vertical-align: text-bottom;
+      margin-left: 1px; border-radius: 1px;
       animation: blink 0.65s step-end infinite;
     }
 
-    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
     /* ── Status bar ── */
     .statusbar {
-      height: 34px;
-      padding: 0 20px;
-      background: var(--panel);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-      font-size: 11px;
-      color: var(--text-2);
-      font-family: var(--sans);
-      font-weight: 500;
+      height: 34px; padding: 0 20px;
+      background: var(--panel); border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0; font-size: 11px;
+      color: var(--text-2); font-family: var(--sans); font-weight: 500;
     }
-
-    .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--text-3);
-      flex-shrink: 0;
-    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; }
     .dot.ready   { background: var(--dot-ready); }
     .dot.loading { background: var(--dot-loading); animation: pulse 1s ease infinite; }
     .dot.error   { background: var(--dot-error); }
 
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .char-count { color: var(--text-3); font-size: 11px; }
 
-    .char-count { margin-left: auto; color: var(--text-3); font-size: 11px; }
+    .new-session-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-3); padding: 3px 10px;
+      border-radius: var(--r-pill); cursor: pointer;
+      font-size: 10px; font-family: var(--sans); font-weight: 600;
+      transition: all 0.18s; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .new-session-btn:hover { color: var(--dot-error); border-color: var(--dot-error); }
 
-    /* ── Desktop panel chips ── */
-    .panel-chips { display: flex; gap: 4px; margin-left: 8px; }
-    .chip {
-      padding: 2px 9px;
-      border-radius: var(--r-pill);
-      font-size: 10px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-3);
-      cursor: pointer;
-      font-family: var(--sans);
-      font-weight: 600;
-      transition: all 0.15s;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .chip.active { background: var(--accent); color: var(--panel); border-color: var(--accent); }
-    .chip:hover:not(.active) { color: var(--text-2); border-color: rgba(40,30,20,0.20); }
+    .spacer { flex: 1; }
 
-    /* ── Mobile tab bar ── */
-    .panel-tabs {
-      display: none;
-      flex-shrink: 0;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
+    /* ── Font size control ── */
+    .font-size-ctrl {
+      display: flex; align-items: center; gap: 7px;
+      padding-left: 12px; border-left: 1px solid var(--border);
     }
-    .ptab {
-      flex: 1;
-      padding: 12px 4px;
-      border: none;
-      background: transparent;
-      font-size: 12px;
-      font-family: var(--sans);
-      font-weight: 600;
-      color: var(--text-3);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.18s;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
+    .fs-label-sm { font-size: 10px; color: var(--text-3); font-weight: 600; user-select: none; }
+    .fs-label-lg { font-size: 14px; color: var(--text-3); font-weight: 600; user-select: none; }
+    #font-size-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 68px; height: 3px;
+      background: rgba(40,30,20,0.14); border-radius: 2px;
+      outline: none; cursor: pointer;
     }
-    .ptab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    #font-size-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 13px; height: 13px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+      border: 2px solid var(--panel); box-shadow: 0 1px 3px rgba(30,20,10,0.20);
+    }
+    #font-size-slider::-moz-range-thumb {
+      width: 13px; height: 13px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: 2px solid var(--panel);
+    }
 
     /* ── Modal ── */
     .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(20,15,10,0.35);
-      backdrop-filter: blur(4px);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(20,15,10,0.35); backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
     }
     .overlay.open { display: flex; }
-
     .modal {
-      background: var(--panel);
-      border-radius: var(--r-lg);
-      padding: 36px;
-      width: 500px;
-      max-width: 94vw;
+      background: var(--panel); border-radius: var(--r-lg);
+      padding: 36px; width: 500px; max-width: 94vw;
       box-shadow: 0 8px 40px rgba(20,15,10,0.16);
-      font-family: var(--sans);
-      border: 1px solid var(--border);
+      font-family: var(--sans); border: 1px solid var(--border);
     }
-
     .modal h2 {
-      font-size: 17px;
-      margin-bottom: 28px;
-      color: var(--text-1);
-      font-weight: 700;
-      letter-spacing: -0.2px;
+      font-size: 17px; margin-bottom: 28px; color: var(--text-1);
+      font-weight: 700; letter-spacing: -0.2px;
       display: flex; align-items: center; gap: 10px;
     }
-
     .modal-icon-wrap {
-      width: 34px; height: 34px;
-      background: var(--hdr-bg);
-      border-radius: var(--r-sm);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-2);
-      border: 1px solid var(--border);
+      width: 34px; height: 34px; background: var(--hdr-bg);
+      border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center;
+      color: var(--text-2); border: 1px solid var(--border);
     }
-
     .field { margin-bottom: 18px; }
-
     .field label {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text-3);
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
+      display: block; font-size: 10px; font-weight: 700;
+      margin-bottom: 6px; color: var(--text-3);
+      letter-spacing: 0.8px; text-transform: uppercase;
     }
-
     .field input, .field select {
-      width: 100%;
-      padding: 10px 13px;
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      font-size: 14px;
-      font-family: var(--sans);
-      outline: none;
+      width: 100%; padding: 10px 13px;
+      border: 1px solid var(--border); border-radius: var(--r-sm);
+      font-size: 14px; font-family: var(--sans); outline: none;
       transition: border-color 0.18s, box-shadow 0.18s;
-      background: var(--bg);
-      color: var(--text-1);
+      background: var(--bg); color: var(--text-1);
     }
     .field input:focus, .field select:focus {
       border-color: rgba(40,30,20,0.35);
       box-shadow: 0 0 0 3px rgba(40,30,20,0.06);
       background: var(--panel);
     }
-
-    .api-note {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 6px;
-      line-height: 1.55;
-    }
+    .api-note { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.55; }
     .api-note strong { color: var(--accent-w); font-weight: 600; }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 28px;
-    }
-
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 28px; }
     .btn-cancel {
-      padding: 10px 22px;
-      border: 1px solid var(--border);
-      background: transparent;
-      border-radius: var(--r-pill);
-      cursor: pointer;
-      font-size: 13px;
-      font-family: var(--sans);
-      font-weight: 600;
-      color: var(--text-2);
-      transition: all 0.18s;
+      padding: 10px 22px; border: 1px solid var(--border);
+      background: transparent; border-radius: var(--r-pill);
+      cursor: pointer; font-size: 13px; font-family: var(--sans);
+      font-weight: 600; color: var(--text-2); transition: all 0.18s;
     }
     .btn-cancel:hover { background: var(--hdr-bg); }
-
     .btn-save {
-      padding: 10px 24px;
-      background: var(--accent);
-      color: var(--panel);
-      border: none;
-      border-radius: var(--r-pill);
-      cursor: pointer;
-      font-size: 13px;
-      font-family: var(--sans);
-      font-weight: 700;
-      transition: opacity 0.18s;
+      padding: 10px 24px; background: var(--accent); color: var(--panel);
+      border: none; border-radius: var(--r-pill); cursor: pointer;
+      font-size: 13px; font-family: var(--sans); font-weight: 700; transition: opacity 0.18s;
     }
     .btn-save:hover { opacity: 0.85; }
-
     .error-text { color: var(--dot-error); font-size: 14px; font-weight: 500; }
 
-    /* ── Panel visibility ── */
-    .panel.hidden { display: none; }
-
-    /* ── Font size control ── */
-    .font-size-ctrl {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      margin-left: 8px;
-      padding-left: 12px;
-      border-left: 1px solid var(--border);
-    }
-
-    .fs-label-sm { font-size: 10px; color: var(--text-3); font-weight: 600; user-select: none; line-height: 1; }
-    .fs-label-lg { font-size: 14px; color: var(--text-3); font-weight: 600; user-select: none; line-height: 1; }
-
-    #font-size-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 68px;
-      height: 3px;
-      background: rgba(40,30,20,0.14);
-      border-radius: 2px;
-      outline: none;
-      cursor: pointer;
-    }
-    #font-size-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 13px; height: 13px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      border: 2px solid var(--panel);
-      box-shadow: 0 1px 3px rgba(30,20,10,0.20);
-      transition: background 0.15s;
-    }
-    #font-size-slider::-moz-range-thumb {
-      width: 13px; height: 13px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      border: 2px solid var(--panel);
-    }
-    #font-size-slider:hover::-webkit-slider-thumb { background: var(--accent-w); }
-
-    /* ── Mobile responsive ── */
+    /* ── Mobile ── */
     @media (max-width: 767px) {
-      body { height: 100dvh; }
       header { height: auto; padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
-      .header-titles .subtitle { display: none; }
-      .title { font-size: 14px; }
-      .mode-toggle { padding: 2px; }
+      .subtitle { display: none; }
+      .title { font-size: 13px; }
       .mode-btn { padding: 4px 9px; font-size: 11px; }
       .settings-btn { padding: 6px 12px; font-size: 11px; }
-      .panel-tabs { display: flex; }
-      .panel-chips { display: none; }
-      .font-size-ctrl { display: none; }
-      .main { grid-template-columns: 1fr !important; gap: 0; padding: 0; }
-      .panel { display: none !important; border-radius: 0; border: none; box-shadow: none; }
-      .panel.mobile-active { display: flex !important; }
-      textarea { padding: 16px 14px; }
-      .output-content { padding: 16px 14px; }
+      .main { padding: 0; }
+      .table-wrap { border-radius: 0; border: none; box-shadow: none; }
+      .table-hdr { display: none; }
+      .tr-row { grid-template-columns: 1fr; min-height: unset; }
+      .cell { border-right: none; border-bottom: 1px solid rgba(40,30,20,0.07); }
+      .cell:last-child { border-bottom: none; }
+      .cell::before {
+        content: attr(data-label);
+        display: block; font-size: 9px; font-weight: 700;
+        text-transform: uppercase; color: var(--text-3);
+        padding: 8px 14px 2px; letter-spacing: 0.5px; font-family: var(--sans);
+      }
+      .cell-text { padding: 4px 14px 12px; }
+      .tr-row.active .cell-source textarea { padding: 8px 14px 24px; min-height: 52px; }
+      .enter-hint { bottom: 4px; right: 10px; }
       .statusbar { padding: 0 14px; }
+      .font-size-ctrl { display: none; }
       .modal { width: 100%; max-width: 100vw; border-radius: 20px 20px 0 0; padding: 28px 20px; position: fixed; bottom: 0; left: 0; right: 0; }
       .overlay.open { align-items: flex-end; }
     }
 
-    /* browse mode */
-    body.browse-mode #input-text { cursor: default; color: var(--text-2); }
+    /* browse mode: prevent new row editing */
+    body.browse-mode .tr-row.active { display: none; }
 
-    /* editable baihuan */
-    #baihuan-output[contenteditable="true"] { outline: none; cursor: text; caret-color: var(--accent-w); }
-    #baihuan-output[contenteditable="true"]:focus { background: #F8F6F0; }
-    .baihuan-panel .panel-header.editable-hint .panel-label::after {
-      content: ' — Editable';
-      font-weight: 400;
-      color: var(--text-3);
-      text-transform: none;
-      letter-spacing: 0;
-    }
-
-    /* focus-visible */
     button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-      outline: 2px solid var(--accent-w);
-      outline-offset: 2px;
+      outline: 2px solid var(--accent-w); outline-offset: 2px;
     }
-
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
@@ -616,74 +410,40 @@
   </div>
 </header>
 
-<!-- Mobile tab bar -->
-<div class="panel-tabs" id="panel-tabs">
-  <button class="ptab active" id="ptab-input"   onclick="activateTab('input')">Source</button>
-  <button class="ptab"        id="ptab-baihuan" onclick="activateTab('baihuan')">Chinese</button>
-  <button class="ptab"        id="ptab-english" onclick="activateTab('english')">English</button>
-</div>
-
 <div class="main">
-
-  <!-- Panel 1: Input -->
-  <div class="panel input-panel">
-    <div class="panel-header">
-      <div class="icon-wrap">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+  <div class="table-wrap">
+    <div class="table-hdr">
+      <div class="col-hdr">
+        <div class="icon-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </div>
+        <span class="col-hdr-label">Source Text</span>
+        <span class="badge">Classical</span>
       </div>
-      <span class="panel-label">Source Text</span>
-      <span class="badge">Classical</span>
+      <div class="col-hdr">
+        <div class="icon-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <span class="col-hdr-label">Modern Chinese</span>
+        <span class="badge">Mandarin</span>
+      </div>
+      <div class="col-hdr">
+        <div class="icon-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <span class="col-hdr-label">English</span>
+        <span class="badge">EN</span>
+      </div>
     </div>
-    <textarea
-      id="input-text"
-      placeholder="Enter classical Chinese text here…&#10;&#10;Example: 學而時習之，不亦說乎？"
-      oninput="handleInput()"
-      autofocus
-    ></textarea>
+    <div class="rows-scroll" id="rows-scroll"></div>
   </div>
-
-  <!-- Panel 2: Modern Chinese -->
-  <div class="panel baihuan-panel">
-    <div class="panel-header" id="baihuan-header">
-      <div class="icon-wrap">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      </div>
-      <span class="panel-label">Modern Chinese</span>
-      <span class="badge">Mandarin</span>
-    </div>
-    <div class="output-scroll">
-      <div class="output-content" id="baihuan-output" oninput="handleBaihuanEdit()">
-        <span class="placeholder">Modern Chinese translation will appear here…</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Panel 3: English -->
-  <div class="panel english-panel">
-    <div class="panel-header">
-      <div class="icon-wrap">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      </div>
-      <span class="panel-label">English</span>
-      <span class="badge">EN</span>
-    </div>
-    <div class="output-scroll">
-      <div class="output-content" id="english-output">
-        <span class="placeholder">English translation will appear here…</span>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <div class="statusbar">
   <div class="dot" id="status-dot"></div>
   <span id="status-text">Set your API key to begin</span>
-  <div class="panel-chips" id="panel-chips">
-    <button class="chip active" id="chip-input"   onclick="togglePanel('input')">Source</button>
-    <button class="chip active" id="chip-baihuan" onclick="togglePanel('baihuan')">Chinese</button>
-    <button class="chip active" id="chip-english" onclick="togglePanel('english')">English</button>
-  </div>
+  <button class="new-session-btn" onclick="confirmNewSession()">New Session</button>
+  <span class="spacer"></span>
   <span class="char-count" id="char-count"></span>
   <div class="font-size-ctrl">
     <span class="fs-label-sm">A</span>
@@ -701,7 +461,6 @@
       </div>
       Settings
     </h2>
-
     <div class="field">
       <label>Translation Service</label>
       <select id="provider-select" onchange="onProviderChange()">
@@ -710,16 +469,11 @@
         <option value="anthropic">Anthropic Claude (paid)</option>
       </select>
     </div>
-
     <div class="field">
-      <label id="apikey-label">Google AI Studio API Key</label>
+      <label id="apikey-label">API Key</label>
       <input type="password" id="api-key-input" placeholder="AIza…" />
-      <div class="api-note" id="apikey-note">
-        Get it free: go to <strong>aistudio.google.com</strong> → "Get API key" → copy and paste.<br>
-        Your key is stored locally in localStorage only.
-      </div>
+      <div class="api-note" id="apikey-note">Get it free: go to <strong>aistudio.google.com</strong> → "Get API key". Stored locally only.</div>
     </div>
-
     <div class="field">
       <label>Model</label>
       <select id="model-select" onchange="onModelChange()"></select>
@@ -727,9 +481,8 @@
     <div class="field" id="custom-model-field" style="display:none; margin-top:-10px;">
       <label>Custom Model ID</label>
       <input type="text" id="custom-model-input" placeholder="e.g. google/gemini-2.0-flash-exp:free" />
-      <div class="api-note">Find a model on <strong>openrouter.ai/models</strong> and paste its ID here.</div>
+      <div class="api-note">Find on <strong>openrouter.ai/models</strong> and paste ID here.</div>
     </div>
-
     <div class="field">
       <label>Interpretation Style</label>
       <select id="style-select">
@@ -739,13 +492,11 @@
         <option value="tao">Taoist — Yi Guan Dao perspective</option>
       </select>
     </div>
-
     <div class="field">
       <label>Firebase Realtime Sync URL <span style="font-weight:400;color:var(--text-3);text-transform:none;">— optional</span></label>
       <input type="text" id="firebase-url-input" placeholder="https://your-project-default-rtdb.firebaseio.com" />
-      <div class="api-note">When set, all visitors see your translation stream live. Get the URL from <strong>console.firebase.google.com</strong> → Realtime Database (test mode).</div>
+      <div class="api-note">Audience sees your rows live. Get URL from <strong>console.firebase.google.com</strong> → Realtime Database (test mode).</div>
     </div>
-
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
       <button class="btn-save" onclick="saveSettings()">Save</button>
@@ -760,145 +511,28 @@
   let model    = localStorage.getItem('cct_model')    || 'google/gemini-2.0-flash-exp:free';
   let style    = localStorage.getItem('cct_style')    || 'scholarly';
 
-  // ── Firebase ──
   const FIREBASE_URL = 'https://cct-translator-default-rtdb.firebaseio.com';
   let firebaseUrl = localStorage.getItem('cct_firebase') || FIREBASE_URL;
-  let fbSource    = null;
-  let fbThrottle  = null;
-  let fbBatch     = null;
+  let fbSource = null;
+  let currentMode = 'browse';
 
-  let debounceTimer = null;
-  let currentAbort  = null;
-  let currentMode   = 'browse';
-  let baihuanEdited = false;
-  let enOnlyTimer   = null;
-  let enOnlyAbort   = null;
+  // ── Row state ──
+  let rows = [];   // [{ id, source, baihuan, en, status }]
+  let nextId = 1;
 
-  // ── Incremental translation cache ──
-  // Avoids re-translating text that was already processed
-  let lastTranslated = '';  // full text of last completed translation
-  let cachedBh       = '';  // baihuan result for lastTranslated
-  let cachedEn       = '';  // english result for lastTranslated
-
-  // ── Panel visibility ──
-  let panels = { input: true, baihuan: true, english: true };
-  let mobileActiveTab = 'input';
-
-  function isMobile() { return window.innerWidth < 768; }
-
-  function togglePanel(name) {
-    const visible = Object.values(panels).filter(Boolean).length;
-    if (panels[name] && visible === 1) return;
-    panels[name] = !panels[name];
-    applyPanelVisibility();
+  // ── Helpers ──
+  function escHtml(s) {
+    return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
   }
 
-  function activateTab(name) {
-    mobileActiveTab = name;
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('mobile-active'));
-    document.querySelector(`.${name}-panel`).classList.add('mobile-active');
-    ['input','baihuan','english'].forEach(n =>
-      document.getElementById(`ptab-${n}`).classList.toggle('active', n === name)
-    );
+  function setStatus(state, msg) {
+    document.getElementById('status-dot').className = `dot ${state}`;
+    document.getElementById('status-text').textContent = msg;
   }
 
-  function applyPanelVisibility() {
-    const names = ['input','baihuan','english'];
-    names.forEach(name => {
-      document.querySelector(`.${name}-panel`).classList.toggle('hidden', !panels[name]);
-      document.getElementById(`chip-${name}`).classList.toggle('active', panels[name]);
-    });
-    const count = Object.values(panels).filter(Boolean).length;
-    document.querySelector('.main').style.gridTemplateColumns = `repeat(${count}, 1fr)`;
-  }
-
-  window.addEventListener('resize', () => {
-    if (isMobile()) {
-      activateTab(mobileActiveTab);
-    } else {
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('mobile-active'));
-      applyPanelVisibility();
-    }
-  });
-
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('btn-browse').classList.toggle('active', mode === 'browse');
-    document.getElementById('btn-edit').classList.toggle('active', mode === 'edit');
-    document.body.classList.toggle('browse-mode', mode === 'browse');
-
-    const inputEl   = document.getElementById('input-text');
-    const baihuanEl = document.getElementById('baihuan-output');
-    const bhHeader  = document.getElementById('baihuan-header');
-
-    inputEl.readOnly          = (mode === 'browse');
-    baihuanEl.contentEditable = (mode === 'edit') ? 'true' : 'false';
-    bhHeader.classList.toggle('editable-hint', mode === 'edit');
-  }
-
-  const MODELS = {
-    openrouter: [
-      { value: 'deepseek/deepseek-chat-v3-0324:free',    label: 'DeepSeek V3 (free — best for Chinese)' },
-      { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (free)' },
-      { value: 'qwen/qwen-2.5-72b-instruct:free',        label: 'Qwen 2.5 72B (free — good Chinese)' },
-      { value: '__custom__',                             label: 'Custom model ID…' },
-    ],
-    gemini: [
-      { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (recommended)' },
-      { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (fast)' },
-      { value: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro (best quality)' },
-    ],
-    anthropic: [
-      { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 (recommended)' },
-      { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fastest)' },
-      { value: 'claude-opus-4-7',           label: 'Claude Opus 4.7 (highest quality)' },
-    ]
-  };
-
-  // ── Firebase sync ──
-  function initFirebase() {
-    if (fbSource) { fbSource.close(); fbSource = null; }
-    if (!firebaseUrl) return;
-
-    fbSource = new EventSource(`${firebaseUrl}/current.json?alt=sse`);
-
-    fbSource.addEventListener('put', e => {
-      try {
-        const { data } = JSON.parse(e.data);
-        if (!data) return;
-        if (currentAbort) return;
-        const { input, baihuan, english, streaming } = data;
-        if (input   !== undefined) document.getElementById('input-text').value = input || '';
-        if (baihuan !== undefined) setOutput('baihuan-output', baihuan || '', !!streaming);
-        if (english !== undefined) setOutput('english-output', english || '', false);
-        setStatus('ready', streaming ? 'Live stream active…' : 'Ready');
-      } catch (_) {}
-    });
-
-    fbSource.addEventListener('patch', e => {
-      try {
-        const { data } = JSON.parse(e.data);
-        if (!data || currentAbort) return;
-        const { baihuan, english, streaming } = data;
-        if (baihuan !== undefined) setOutput('baihuan-output', baihuan, !!streaming);
-        if (english !== undefined) setOutput('english-output', english, false);
-      } catch (_) {}
-    });
-  }
-
-  function writeToFirebase(data) {
-    if (!firebaseUrl || !apiKey) return;
-    fbBatch = { ...(fbBatch || {}), ...data };
-    if (fbThrottle) return;
-    fbThrottle = setTimeout(() => {
-      fbThrottle = null;
-      const payload = fbBatch; fbBatch = null;
-      fetch(`${firebaseUrl}/current.json`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(() => {});
-    }, 400);
+  function scrollToBottom() {
+    const sc = document.getElementById('rows-scroll');
+    if (sc) sc.scrollTop = sc.scrollHeight;
   }
 
   // ── Init ──
@@ -909,156 +543,270 @@
     document.getElementById('model-select').value    = model;
     updateProviderLabels(provider);
     initFirebase();
-    if (isMobile()) {
-      activateTab('input');
-    } else {
-      applyPanelVisibility();
-    }
+
     if (apiKey) {
-      setStatus('ready', 'Ready');
+      setStatus('ready', 'Ready — switch to Edit to begin');
     } else if (firebaseUrl) {
-      setStatus('ready', 'Connected — waiting for translation…');
+      setStatus('ready', 'Connected — watching live…');
     } else {
       openSettings();
     }
+
+    const savedSize = localStorage.getItem('cct_font_size');
+    if (savedSize) { document.getElementById('font-size-slider').value = savedSize; applyFontSize(parseInt(savedSize)); }
+    else applyFontSize(16);
   };
 
-  function renderModelOptions(p) {
-    const sel = document.getElementById('model-select');
-    sel.innerHTML = MODELS[p].map(m =>
-      `<option value="${m.value}">${m.label}</option>`
-    ).join('');
-  }
+  // ── Mode ──
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-browse').classList.toggle('active', mode === 'browse');
+    document.getElementById('btn-edit').classList.toggle('active', mode === 'edit');
+    document.body.classList.toggle('browse-mode', mode === 'browse');
 
-  function updateProviderLabels(p) {
-    const label = document.getElementById('apikey-label');
-    const note  = document.getElementById('apikey-note');
-    const input = document.getElementById('api-key-input');
-    if (p === 'openrouter') {
-      label.textContent = 'OpenRouter API Key';
-      input.placeholder = 'sk-or-v1-…';
-      note.innerHTML = 'Get it free: go to <strong>openrouter.ai</strong> → Sign in → "Keys" → Create Key (no card required).<br>Stored locally in localStorage only.';
-    } else if (p === 'gemini') {
-      label.textContent = 'Google AI Studio API Key';
-      input.placeholder = 'AIza…';
-      note.innerHTML = 'Get it free: go to <strong>aistudio.google.com</strong> → "Get API key" → copy and paste.<br>Stored locally in localStorage only.';
-    } else {
-      label.textContent = 'Anthropic API Key';
-      input.placeholder = 'sk-ant-api03-…';
-      note.innerHTML = 'Go to <strong>console.anthropic.com</strong> → API Keys → Create Key.<br>Stored locally in localStorage only.';
+    if (mode === 'edit') {
+      const last = rows[rows.length - 1];
+      if (!last || last.status !== 'active') addRow();
+      else focusActiveRow();
     }
   }
 
-  function onProviderChange() {
-    const p = document.getElementById('provider-select').value;
-    renderModelOptions(p);
-    updateProviderLabels(p);
-    document.getElementById('custom-model-field').style.display = 'none';
+  // ── Row management ──
+  function addRow() {
+    const id = nextId++;
+    const row = { id, source: '', baihuan: '', en: '', status: 'active' };
+    rows.push(row);
+
+    const container = document.getElementById('rows-scroll');
+    const el = document.createElement('div');
+    el.className = 'tr-row active';
+    el.id = `row-${id}`;
+    el.innerHTML = `
+      <div class="cell cell-source" data-label="Source">
+        <span class="row-num">${id}</span>
+        <textarea id="src-${id}"
+          placeholder="Type classical Chinese here, then press ↵ Enter to translate…"
+          onkeydown="handleRowKeyDown(${id}, event)"
+          oninput="handleRowInput(${id})"></textarea>
+        <span class="enter-hint">↵ Translate</span>
+      </div>
+      <div class="cell cell-chinese" id="zh-cell-${id}" data-label="Modern Chinese">
+        <div class="cell-text" style="color:var(--text-3);font-style:italic;font-size:13px;font-family:var(--sans);padding:14px 18px;">Awaiting input…</div>
+      </div>
+      <div class="cell cell-english" id="en-cell-${id}" data-label="English">
+        <div class="cell-text" style="color:var(--text-3);font-style:italic;font-size:13px;padding:14px 18px;">Awaiting input…</div>
+      </div>`;
+    container.appendChild(el);
+    scrollToBottom();
+    focusActiveRow();
+    return id;
   }
 
-  function onModelChange() {
-    const val = document.getElementById('model-select').value;
-    document.getElementById('custom-model-field').style.display =
-      val === '__custom__' ? 'block' : 'none';
-  }
-
-  // ── Input handler ──
-  function handleInput() {
-    if (currentMode !== 'edit') return;
-    const raw  = document.getElementById('input-text').value;
-    const text = raw.trim();
-    document.getElementById('char-count').textContent = raw.length ? `${raw.length} chars` : '';
-
-    clearTimeout(debounceTimer);
-
-    if (!text) {
-      resetOutputs();
-      setStatus('ready', 'Ready');
-      lastTranslated = ''; cachedBh = ''; cachedEn = '';
-      return;
+  function focusActiveRow() {
+    const last = rows[rows.length - 1];
+    if (last && last.status === 'active' && currentMode === 'edit') {
+      const ta = document.getElementById(`src-${last.id}`);
+      if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
     }
-
-    // Detect pure append: new text is an extension of the last translated text
-    const isAppend = lastTranslated.length >= 10 && text.startsWith(lastTranslated);
-    const appendPart = isAppend ? text.slice(lastTranslated.length).trim() : '';
-
-    if (isAppend && !appendPart) return; // no new content yet
-
-    setStatus('loading', 'Waiting…');
-
-    debounceTimer = setTimeout(() => {
-      if (!apiKey) { openSettings(); return; }
-      if (isAppend && appendPart) {
-        translateAppend(appendPart, text);
-      } else {
-        lastTranslated = ''; cachedBh = ''; cachedEn = '';
-        translate(text, (bh, en) => {
-          lastTranslated = text;
-          cachedBh = bh;
-          cachedEn = en;
-        });
-      }
-    }, 750);
   }
 
-  function resetOutputs() {
-    setOutput('baihuan-output', null, false);
-    setOutput('english-output', null, false);
+  // ── Row input ──
+  function handleRowKeyDown(id, event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      const ta = document.getElementById(`src-${id}`);
+      const text = ta ? ta.value.trim() : '';
+      if (text) submitRow(id, text);
+    }
   }
 
-  // ── Append-only incremental translation ──
-  async function translateAppend(newPart, fullText) {
-    baihuanEdited = false;
-    if (enOnlyAbort) { enOnlyAbort.abort(); enOnlyAbort = null; }
-    if (currentAbort) currentAbort.abort();
-    currentAbort = new AbortController();
+  function handleRowInput(id) {
+    const ta = document.getElementById(`src-${id}`);
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(60, ta.scrollHeight) + 'px';
+    document.getElementById('char-count').textContent = ta.value.length ? `${ta.value.length} chars` : '';
+    scrollToBottom();
+  }
 
-    setStatus('loading', 'Translating new segment…');
-    if (isMobile()) activateTab('baihuan');
+  // ── Submit & translate ──
+  async function submitRow(id, sourceText) {
+    const row = rows.find(r => r.id === id);
+    if (!row || row.status !== 'active') return;
 
-    // Show cached content immediately while the new part streams in
-    if (cachedBh) setOutput('baihuan-output', cachedBh, true);
-    if (cachedEn) setOutput('english-output', cachedEn, false);
+    row.source = sourceText;
+    row.status = 'loading';
 
-    let newBh = '', newEn = '';
+    const el = document.getElementById(`row-${id}`);
+    if (!el) return;
+    el.className = 'tr-row loading';
+    el.querySelector('.cell-source').innerHTML =
+      `<span class="row-num">${id}</span><div class="cell-text source-text">${escHtml(sourceText)}</div>`;
 
-    // Custom renderer: prepend cached content in front of the streaming new part
-    const esc = s => s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
-    const appendRenderer = (id, text, streaming) => {
-      const el = document.getElementById(id);
-      if (id === 'baihuan-output') {
-        const prefix = cachedBh ? esc(cachedBh) + (text ? '<br><br>' : '') : '';
-        el.innerHTML = prefix + esc(text) + (streaming ? '<span class="cursor"></span>' : '');
-      } else {
-        const prefix = cachedEn ? esc(cachedEn) + (text ? '<br><br>' : '') : '';
-        el.innerHTML = prefix + esc(text);
-      }
+    const zhCell = document.getElementById(`zh-cell-${id}`);
+    const enCell = document.getElementById(`en-cell-${id}`);
+    if (zhCell) zhCell.innerHTML = '<div class="cell-spinner"><div class="row-spinner"></div></div>';
+    if (enCell) enCell.innerHTML = '<div class="cell-spinner"><div class="row-spinner"></div></div>';
+
+    writeRowToFirebase(id, { source: sourceText, baihuan: '', en: '', streaming: true });
+
+    // New input row
+    addRow();
+    document.getElementById('char-count').textContent = '';
+
+    if (!apiKey) { openSettings(); return; }
+
+    setStatus('loading', `Row ${id}: translating…`);
+
+    const abort = new AbortController();
+
+    // Renderer routes setOutput calls → row cells
+    const rowRenderer = (outputId, text, streaming) => {
+      const cell = outputId === 'baihuan-output'
+        ? document.getElementById(`zh-cell-${id}`)
+        : document.getElementById(`en-cell-${id}`);
+      if (!cell) return;
+      const cls = outputId === 'baihuan-output' ? 'chinese-text' : 'english-text';
+      cell.innerHTML = text
+        ? `<div class="cell-text ${cls}">${escHtml(text)}${streaming && outputId === 'baihuan-output' ? '<span class="streaming-cursor"></span>' : ''}</div>`
+        : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
     };
 
     const onProgress = ({ bh, en, streaming }) => {
-      newBh = bh; newEn = en;
-      const combinedBh = cachedBh ? cachedBh + '\n\n' + bh : bh;
-      const combinedEn = cachedEn ? cachedEn + '\n\n' + en : en;
-      writeToFirebase({ input: fullText, baihuan: combinedBh, english: combinedEn, streaming });
+      row.baihuan = bh; row.en = en;
+      writeRowToFirebase(id, { source: sourceText, baihuan: bh, en, streaming });
     };
 
     try {
       if (provider === 'openrouter') {
-        await translateOpenRouter(newPart, currentAbort.signal, onProgress, appendRenderer);
+        await translateOpenRouter(sourceText, abort.signal, onProgress, rowRenderer);
       } else if (provider === 'gemini') {
-        await translateGemini(newPart, currentAbort.signal, onProgress, appendRenderer);
+        await translateGemini(sourceText, abort.signal, onProgress, rowRenderer);
       } else {
-        await translateAnthropic(newPart, currentAbort.signal, onProgress, appendRenderer);
+        await translateAnthropic(sourceText, abort.signal, onProgress, rowRenderer);
       }
 
-      cachedBh = cachedBh ? cachedBh + '\n\n' + newBh : newBh;
-      cachedEn = cachedEn ? cachedEn + '\n\n' + newEn : newEn;
-      lastTranslated = fullText;
-      setStatus('ready', 'Done');
+      row.status = 'done';
+      el.className = 'tr-row done';
+      writeRowToFirebase(id, { source: sourceText, baihuan: row.baihuan, en: row.en, streaming: false });
+      setStatus('ready', `Row ${id} done`);
+
     } catch (err) {
       if (err.name === 'AbortError') return;
+      row.status = 'error';
+      el.className = 'tr-row error';
+      if (zhCell) zhCell.innerHTML = '<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Failed</div>';
+      if (enCell) enCell.innerHTML = '<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Failed</div>';
       setStatus('error', `Error: ${err.message}`);
     }
+  }
+
+  // ── Firebase write (per-row) ──
+  function writeRowToFirebase(id, data) {
+    if (!firebaseUrl || !apiKey) return;
+    fetch(`${firebaseUrl}/rows/${id}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).catch(() => {});
+  }
+
+  // ── New session ──
+  function confirmNewSession() {
+    if (!confirm('Clear all rows and start a new session?')) return;
+    rows = []; nextId = 1;
+    document.getElementById('rows-scroll').innerHTML = '';
+    document.getElementById('char-count').textContent = '';
+    if (firebaseUrl && apiKey) fetch(`${firebaseUrl}/rows.json`, { method: 'DELETE' }).catch(() => {});
+    if (currentMode === 'edit') addRow();
+    setStatus('ready', 'New session started');
+  }
+
+  // ── Firebase sync (Browse mode) ──
+  function initFirebase() {
+    if (fbSource) { fbSource.close(); fbSource = null; }
+    if (!firebaseUrl) return;
+
+    fbSource = new EventSource(`${firebaseUrl}/rows.json?alt=sse`);
+
+    fbSource.addEventListener('put', e => {
+      try {
+        const { data } = JSON.parse(e.data);
+        if (currentMode === 'edit') return;
+        if (!data) return;
+        renderBrowseAll(data);
+        setStatus('ready', 'Live');
+      } catch (_) {}
+    });
+
+    fbSource.addEventListener('patch', e => {
+      try {
+        const { data } = JSON.parse(e.data);
+        if (currentMode === 'edit' || !data) return;
+        Object.entries(data).forEach(([key, rowData]) => updateBrowseRow(parseInt(key), rowData));
+        setStatus('ready', 'Live');
+      } catch (_) {}
+    });
+  }
+
+  function renderBrowseAll(data) {
+    const container = document.getElementById('rows-scroll');
+    container.innerHTML = ''; rows = [];
+    const entries = Object.entries(data).sort(([a],[b]) => parseInt(a) - parseInt(b));
+    for (const [key, rd] of entries) {
+      const id = parseInt(key);
+      if (id >= nextId) nextId = id + 1;
+      const row = { id, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: rd.streaming ? 'loading' : 'done' };
+      rows.push(row);
+      appendBrowseRow(row, !!rd.streaming);
+    }
+    scrollToBottom();
+  }
+
+  function appendBrowseRow(row, streaming) {
+    const container = document.getElementById('rows-scroll');
+    const el = document.createElement('div');
+    el.id = `row-${row.id}`;
+    el.className = `tr-row ${streaming ? 'loading' : 'done'}`;
+    el.innerHTML = `
+      <div class="cell cell-source" data-label="Source">
+        <span class="row-num">${row.id}</span>
+        <div class="cell-text source-text">${escHtml(row.source)}</div>
+      </div>
+      <div class="cell cell-chinese" id="zh-cell-${row.id}" data-label="Modern Chinese">
+        ${row.baihuan
+          ? `<div class="cell-text chinese-text">${escHtml(row.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
+          : '<div class="cell-spinner"><div class="row-spinner"></div></div>'}
+      </div>
+      <div class="cell cell-english" id="en-cell-${row.id}" data-label="English">
+        ${row.en
+          ? `<div class="cell-text english-text">${escHtml(row.en)}</div>`
+          : (streaming ? '' : '')}
+      </div>`;
+    container.appendChild(el);
+  }
+
+  function updateBrowseRow(id, rd) {
+    let el = document.getElementById(`row-${id}`);
+    if (!el) {
+      const row = { id, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: 'loading' };
+      rows.push(row);
+      if (id >= nextId) nextId = id + 1;
+      appendBrowseRow(row, true);
+      el = document.getElementById(`row-${id}`);
+    }
+    if (!el) return;
+    const streaming = !!rd.streaming;
+    el.className = `tr-row ${streaming ? 'loading' : 'done'}`;
+    const zh = document.getElementById(`zh-cell-${id}`);
+    const en = document.getElementById(`en-cell-${id}`);
+    if (rd.baihuan !== undefined && zh)
+      zh.innerHTML = rd.baihuan
+        ? `<div class="cell-text chinese-text">${escHtml(rd.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
+        : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
+    if (rd.en !== undefined && en)
+      en.innerHTML = rd.en ? `<div class="cell-text english-text">${escHtml(rd.en)}</div>` : '';
+    scrollToBottom();
   }
 
   // ── System prompt ──
@@ -1086,151 +834,25 @@
 ##END##`;
   }
 
-  // ── Streaming translation ──
-  async function translate(text, onDone = null) {
-    baihuanEdited = false;
-    if (enOnlyAbort) { enOnlyAbort.abort(); enOnlyAbort = null; }
-    if (currentAbort) currentAbort.abort();
-    currentAbort = new AbortController();
-
-    setStatus('loading', 'Translating…');
-    setOutput('baihuan-output', null, true, true);
-    setOutput('english-output', null, true, true);
-    writeToFirebase({ input: text, baihuan: '', english: '', streaming: true });
-    if (isMobile()) activateTab('baihuan');
-
-    const onProgress = ({ bh, en, streaming }) => {
-      if (!streaming && onDone) onDone(bh, en);
-      writeToFirebase({ input: text, baihuan: bh, english: en, streaming });
+  function parseSections(text) {
+    const bhM = text.match(/##BAIHUAN##\n?([\s\S]*?)(?=##ENGLISH##|##END##|$)/);
+    const enM = text.match(/##ENGLISH##\n?([\s\S]*?)(?=##END##|$)/);
+    return {
+      bh: bhM ? bhM[1].trim() : '',
+      bhDone: text.includes('##ENGLISH##'),
+      en: enM ? enM[1].trim() : '',
+      enDone: text.includes('##END##')
     };
-
-    try {
-      if (provider === 'openrouter') {
-        await translateOpenRouter(text, currentAbort.signal, onProgress);
-      } else if (provider === 'gemini') {
-        await translateGemini(text, currentAbort.signal, onProgress);
-      } else {
-        await translateAnthropic(text, currentAbort.signal, onProgress);
-      }
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      setStatus('error', `Error: ${err.message}`);
-      renderError('baihuan-output', `Translation failed: ${err.message}`);
-      renderError('english-output', `Translation failed: ${err.message}`);
-    }
   }
 
-  // ── Anthropic Claude ──
-  async function translateAnthropic(text, signal, onProgress, renderer = null) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model, max_tokens: 2048, stream: true,
-        system: buildSystemPrompt(),
-        messages: [{ role: 'user', content: text }]
-      }),
-      signal
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
-    }
-
-    await readSSEStream(res, chunk => {
-      try {
-        const evt = JSON.parse(chunk);
-        if (evt.type === 'content_block_delta' && evt.delta?.text) return evt.delta.text;
-        if (evt.type === 'message_stop') return null;
-      } catch (_) {}
-      return undefined;
-    }, onProgress, renderer);
-  }
-
-  // ── Google Gemini ──
-  async function translateGemini(text, signal, onProgress, renderer = null) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: buildSystemPrompt() }] },
-        contents: [{ role: 'user', parts: [{ text }] }],
-        generationConfig: { maxOutputTokens: 2048 }
-      }),
-      signal
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
-    }
-
-    await readSSEStream(res, chunk => {
-      try {
-        const evt = JSON.parse(chunk);
-        const part = evt.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (part !== undefined) return part;
-        if (evt.candidates?.[0]?.finishReason === 'STOP') return null;
-      } catch (_) {}
-      return undefined;
-    }, onProgress, renderer);
-  }
-
-  // ── OpenRouter ──
-  async function translateOpenRouter(text, signal, onProgress, renderer = null) {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://localhost',
-        'X-Title': 'Wenyan AI Translator'
-      },
-      body: JSON.stringify({
-        model, stream: true, max_tokens: 2048,
-        messages: [
-          { role: 'system', content: buildSystemPrompt() },
-          { role: 'user',   content: text }
-        ]
-      }),
-      signal
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
-    }
-
-    await readSSEStream(res, chunk => {
-      if (chunk === '[DONE]') return null;
-      try {
-        const evt = JSON.parse(chunk);
-        const delta = evt.choices?.[0]?.delta?.content;
-        if (delta !== undefined && delta !== null) return delta;
-        if (evt.choices?.[0]?.finish_reason === 'stop') return null;
-      } catch (_) {}
-      return undefined;
-    }, onProgress, renderer);
-  }
-
-  // ── Generic SSE reader ──
+  // ── SSE reader ──
   async function readSSEStream(res, parser, onProgress, renderer = null) {
-    const reader  = res.body.getReader();
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let sseBuffer = '';
-    let fullText  = '';
-    let prevBh = '', prevEn = '';
+    let sseBuffer = '', fullText = '', prevBh = '', prevEn = '';
 
-    // renderer replaces setOutput for append mode; null = use default setOutput
     const render = (id, text, streaming) =>
-      renderer ? renderer(id, text, streaming) : setOutput(id, text, streaming);
+      renderer ? renderer(id, text, streaming) : null;
 
     const finish = () => {
       const { bh, en } = parseSections(fullText);
@@ -1243,215 +865,124 @@
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       sseBuffer += decoder.decode(value, { stream: true });
       const lines = sseBuffer.split('\n');
       sseBuffer = lines.pop();
-
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         const data = line.slice(6).trim();
         if (data === '[DONE]') continue;
-
         const result = parser(data);
         if (result === null) { finish(); return; }
         if (result !== undefined) {
           fullText += result;
           const { bh, bhDone, en, enDone } = parseSections(fullText);
           if (bh !== prevBh) { prevBh = bh; render('baihuan-output', bh, !bhDone); }
-          if (en !== prevEn) { prevEn = en; render('english-output',  en, !enDone); }
+          if (en !== prevEn) { prevEn = en; render('english-output', en, !enDone); }
           if (onProgress) onProgress({ bh, en, streaming: true });
         }
       }
     }
-
     finish();
   }
 
-  // ── Baihuan manual edit ──
-  function handleBaihuanEdit() {
-    if (currentMode !== 'edit') return;
-    baihuanEdited = true;
-    if (currentAbort) { currentAbort.abort(); currentAbort = null; }
-
-    clearTimeout(enOnlyTimer);
-    setStatus('loading', 'Updating English from edited Chinese…');
-
-    enOnlyTimer = setTimeout(() => {
-      const bh = document.getElementById('baihuan-output').innerText.trim();
-      if (!bh) return;
-      if (!apiKey) { openSettings(); return; }
-      translateEnglishOnly(bh);
-    }, 750);
+  // ── Providers ──
+  async function translateAnthropic(text, signal, onProgress, renderer = null) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model, max_tokens: 2048, stream: true, system: buildSystemPrompt(), messages: [{ role: 'user', content: text }] }),
+      signal
+    });
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+    await readSSEStream(res, chunk => {
+      try { const e = JSON.parse(chunk); if (e.type==='content_block_delta'&&e.delta?.text) return e.delta.text; if (e.type==='message_stop') return null; } catch(_) {}
+      return undefined;
+    }, onProgress, renderer);
   }
 
-  async function translateEnglishOnly(baihuanText) {
-    if (enOnlyAbort) enOnlyAbort.abort();
-    enOnlyAbort = new AbortController();
-    const signal = enOnlyAbort.signal;
-
-    setOutput('english-output', null, true, true);
-
-    const sysPrompt = '你是翻譯家。將繁體中文直接翻譯成自然流暢的英文。只輸出英文翻譯，不加任何說明、標記或格式符號。';
-
-    try {
-      let res;
-      if (provider === 'openrouter') {
-        res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'HTTP-Referer': 'https://localhost',
-            'X-Title': 'Wenyan AI Translator'
-          },
-          body: JSON.stringify({
-            model, stream: true, max_tokens: 1024,
-            messages: [
-              { role: 'system', content: sysPrompt },
-              { role: 'user',   content: baihuanText }
-            ]
-          }),
-          signal
-        });
-      } else if (provider === 'gemini') {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
-        res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: sysPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: baihuanText }] }],
-            generationConfig: { maxOutputTokens: 1024 }
-          }),
-          signal
-        });
-      } else {
-        res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true'
-          },
-          body: JSON.stringify({
-            model, max_tokens: 1024, stream: true,
-            system: sysPrompt,
-            messages: [{ role: 'user', content: baihuanText }]
-          }),
-          signal
-        });
-      }
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${res.status}`);
-      }
-
-      const reader  = res.body.getReader();
-      const decoder = new TextDecoder();
-      let sseBuffer = '';
-      let fullText  = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        sseBuffer += decoder.decode(value, { stream: true });
-        const lines = sseBuffer.split('\n');
-        sseBuffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-
-          let chunk, isDone = false;
-          try {
-            if (data === '[DONE]') { isDone = true; }
-            else {
-              const evt = JSON.parse(data);
-              if (provider === 'gemini') {
-                chunk = evt.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (evt.candidates?.[0]?.finishReason === 'STOP') isDone = true;
-              } else if (provider === 'anthropic') {
-                if (evt.type === 'content_block_delta') chunk = evt.delta?.text;
-                if (evt.type === 'message_stop') isDone = true;
-              } else {
-                chunk = evt.choices?.[0]?.delta?.content;
-                if (evt.choices?.[0]?.finish_reason === 'stop') isDone = true;
-              }
-            }
-          } catch (_) {}
-
-          if (chunk) { fullText += chunk; setOutput('english-output', fullText, true); }
-          if (isDone) {
-            setOutput('english-output', fullText, false);
-            setStatus('ready', 'English updated');
-            const bh  = document.getElementById('baihuan-output').innerText.trim();
-            const inp = document.getElementById('input-text').value.trim();
-            writeToFirebase({ input: inp, baihuan: bh, english: fullText, streaming: false });
-            return;
-          }
-        }
-      }
-
-      setOutput('english-output', fullText, false);
-      setStatus('ready', 'English updated');
-      const bh2  = document.getElementById('baihuan-output').innerText.trim();
-      const inp2 = document.getElementById('input-text').value.trim();
-      writeToFirebase({ input: inp2, baihuan: bh2, english: fullText, streaming: false });
-
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      setStatus('error', `Error: ${err.message}`);
-      renderError('english-output', `Translation failed: ${err.message}`);
-    }
+  async function translateGemini(text, signal, onProgress, renderer = null) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: buildSystemPrompt() }] }, contents: [{ role: 'user', parts: [{ text }] }], generationConfig: { maxOutputTokens: 2048 } }),
+      signal
+    });
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+    await readSSEStream(res, chunk => {
+      try { const e = JSON.parse(chunk); const p = e.candidates?.[0]?.content?.parts?.[0]?.text; if (p!==undefined) return p; if (e.candidates?.[0]?.finishReason==='STOP') return null; } catch(_) {}
+      return undefined;
+    }, onProgress, renderer);
   }
 
-  // ── Parse sections ──
-  function parseSections(text) {
-    const bhM = text.match(/##BAIHUAN##\n?([\s\S]*?)(?=##ENGLISH##|##END##|$)/);
-    const enM = text.match(/##ENGLISH##\n?([\s\S]*?)(?=##END##|$)/);
-    return {
-      bh:     bhM ? bhM[1].trim() : '',
-      bhDone: text.includes('##ENGLISH##'),
-      en:     enM ? enM[1].trim() : '',
-      enDone: text.includes('##END##')
-    };
-  }
-
-  // ── Render helpers ──
-  function setOutput(id, text, streaming, showSpinner = false) {
-    const el = document.getElementById(id);
-    if (showSpinner) {
-      el.innerHTML = '<div class="loading-indicator"><div class="spinner"></div>Translating…</div>';
-      return;
-    }
-    if (!text) {
-      const ph = id === 'baihuan-output'
-        ? 'Modern Chinese translation will appear here…'
-        : 'English translation will appear here…';
-      el.innerHTML = `<span class="placeholder">${ph}</span>`;
-      return;
-    }
-    const escaped = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\n/g, '<br>');
-    el.innerHTML = escaped + (streaming ? '<span class="cursor"></span>' : '');
-  }
-
-  function renderError(id, msg) {
-    document.getElementById(id).innerHTML = `<span class="error-text">⚠ ${msg}</span>`;
-  }
-
-  function setStatus(state, msg) {
-    document.getElementById('status-dot').className = `dot ${state}`;
-    document.getElementById('status-text').textContent = msg;
+  async function translateOpenRouter(text, signal, onProgress, renderer = null) {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://localhost', 'X-Title': 'Tao Seminar Real-Time Translator' },
+      body: JSON.stringify({ model, stream: true, max_tokens: 2048, messages: [{ role: 'system', content: buildSystemPrompt() }, { role: 'user', content: text }] }),
+      signal
+    });
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+    await readSSEStream(res, chunk => {
+      if (chunk==='[DONE]') return null;
+      try { const e = JSON.parse(chunk); const d = e.choices?.[0]?.delta?.content; if (d!==undefined&&d!==null) return d; if (e.choices?.[0]?.finish_reason==='stop') return null; } catch(_) {}
+      return undefined;
+    }, onProgress, renderer);
   }
 
   // ── Settings ──
+  const MODELS = {
+    openrouter: [
+      { value: 'deepseek/deepseek-chat-v3-0324:free', label: 'DeepSeek V3 (free — best for Chinese)' },
+      { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (free)' },
+      { value: 'qwen/qwen-2.5-72b-instruct:free', label: 'Qwen 2.5 72B (free — good Chinese)' },
+      { value: '__custom__', label: 'Custom model ID…' },
+    ],
+    gemini: [
+      { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (recommended)' },
+      { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (fast)' },
+      { value: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro (best quality)' },
+    ],
+    anthropic: [
+      { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 (recommended)' },
+      { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fastest)' },
+      { value: 'claude-opus-4-7',           label: 'Claude Opus 4.7 (highest quality)' },
+    ]
+  };
+
+  function renderModelOptions(p) {
+    const sel = document.getElementById('model-select');
+    sel.innerHTML = MODELS[p].map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+  }
+
+  function updateProviderLabels(p) {
+    const label = document.getElementById('apikey-label');
+    const note  = document.getElementById('apikey-note');
+    const input = document.getElementById('api-key-input');
+    if (p === 'openrouter') {
+      label.textContent = 'OpenRouter API Key'; input.placeholder = 'sk-or-v1-…';
+      note.innerHTML = 'Free: go to <strong>openrouter.ai</strong> → Keys → Create Key. Stored locally.';
+    } else if (p === 'gemini') {
+      label.textContent = 'Google AI Studio API Key'; input.placeholder = 'AIza…';
+      note.innerHTML = 'Free: go to <strong>aistudio.google.com</strong> → Get API key. Stored locally.';
+    } else {
+      label.textContent = 'Anthropic API Key'; input.placeholder = 'sk-ant-api03-…';
+      note.innerHTML = 'Go to <strong>console.anthropic.com</strong> → API Keys. Stored locally.';
+    }
+  }
+
+  function onProviderChange() {
+    const p = document.getElementById('provider-select').value;
+    renderModelOptions(p); updateProviderLabels(p);
+    document.getElementById('custom-model-field').style.display = 'none';
+  }
+
+  function onModelChange() {
+    document.getElementById('custom-model-field').style.display =
+      document.getElementById('model-select').value === '__custom__' ? 'block' : 'none';
+  }
+
   function openSettings() {
     document.getElementById('provider-select').value    = provider;
     document.getElementById('api-key-input').value      = apiKey;
@@ -1471,29 +1002,22 @@
     const k  = document.getElementById('api-key-input').value.trim();
     const fb = document.getElementById('firebase-url-input').value.trim().replace(/\/$/, '');
     if (!k && !fb) { alert('Please enter an API key or Firebase URL.'); return; }
-
     if (k) { apiKey = k; localStorage.setItem('cct_api_key', apiKey); }
     provider = document.getElementById('provider-select').value;
-    const selectedModel = document.getElementById('model-select').value;
-    model = selectedModel === '__custom__'
-      ? document.getElementById('custom-model-input').value.trim()
-      : selectedModel;
+    const sel = document.getElementById('model-select').value;
+    model = sel === '__custom__' ? document.getElementById('custom-model-input').value.trim() : sel;
     if (k && !model) { alert('Please enter a custom model ID.'); return; }
     style = document.getElementById('style-select').value;
     localStorage.setItem('cct_provider', provider);
-    localStorage.setItem('cct_model',    model);
-    localStorage.setItem('cct_style',    style);
-
+    localStorage.setItem('cct_model', model);
+    localStorage.setItem('cct_style', style);
     if (fb !== firebaseUrl) {
       firebaseUrl = fb;
       localStorage.setItem('cct_firebase', firebaseUrl);
       initFirebase();
     }
-
     closeSettings();
     setStatus('ready', 'Settings saved');
-    const t = document.getElementById('input-text').value.trim();
-    if (t && apiKey) translate(t);
   }
 
   document.getElementById('settings-overlay').addEventListener('click', e => {
@@ -1506,22 +1030,12 @@
 
   // ── Font size slider ──
   const slider = document.getElementById('font-size-slider');
-
   function applyFontSize(size) {
     document.documentElement.style.setProperty('--content-font', size + 'px');
     const pct = ((size - 13) / (26 - 13)) * 100;
     slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, rgba(40,30,20,0.14) ${pct}%)`;
   }
-
-  const savedFontSize = localStorage.getItem('cct_font_size');
-  if (savedFontSize) {
-    slider.value = savedFontSize;
-    applyFontSize(parseInt(savedFontSize));
-  } else {
-    applyFontSize(16);
-  }
-
-  slider.addEventListener('input', function () {
+  slider.addEventListener('input', function() {
     const size = parseInt(this.value);
     applyFontSize(size);
     localStorage.setItem('cct_font_size', size);
