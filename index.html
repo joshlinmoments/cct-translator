@@ -244,13 +244,25 @@
     }
 
     /* Editable completed rows */
-    .tr-row.done .cell-source .source-text {
+    .tr-row.done .cell-source .source-text,
+    .tr-row.done .cell-chinese .chinese-text {
       cursor: text;
       border-radius: 4px;
       transition: background 0.15s;
     }
     .tr-row.done .cell-source .source-text:hover {
       background: rgba(40,30,20,0.05);
+    }
+
+    /* Chinese text inline editing */
+    .chinese-text[contenteditable="true"] {
+      outline: none;
+      cursor: text;
+      caret-color: var(--accent-w);
+      background: rgba(192,80,32,0.05);
+      border-radius: 4px;
+      min-height: 1em;
+      white-space: pre-wrap;
     }
     .tr-row.editing .cell-source { background: #FFFDF8; }
     .edit-textarea {
@@ -763,8 +775,9 @@
         : document.getElementById(`en-cell-${id}`);
       if (!cell) return;
       const cls = outputId === 'baihuan-output' ? 'chinese-text' : 'english-text';
+      const editAttr = (!streaming && outputId === 'baihuan-output') ? ` onclick="makeZhEditable(${id})" title="Click to edit"` : '';
       cell.innerHTML = text
-        ? `<div class="cell-text ${cls}">${escHtml(text)}${streaming && outputId === 'baihuan-output' ? '<span class="streaming-cursor"></span>' : ''}</div>`
+        ? `<div class="cell-text ${cls}"${editAttr}>${escHtml(text)}${streaming && outputId === 'baihuan-output' ? '<span class="streaming-cursor"></span>' : ''}</div>`
         : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
     };
 
@@ -797,6 +810,58 @@
       if (enCell) enCell.innerHTML = '<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Failed</div>';
       setStatus('error', `Error: ${err.message}`);
     }
+  }
+
+  // ── Edit Modern Chinese output inline ──
+  function makeZhEditable(id) {
+    const row = rows.find(r => r.id === id);
+    if (!row || row.status === 'active') return;
+    const cell = document.getElementById(`zh-cell-${id}`);
+    if (!cell) return;
+    const div = cell.querySelector('.chinese-text');
+    if (!div || div.getAttribute('contenteditable') === 'true') return;
+
+    div.setAttribute('contenteditable', 'true');
+    div.focus();
+
+    // Place cursor at end
+    const range = document.createRange();
+    range.selectNodeContents(div);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    const save = () => saveZhEdit(id, div, row);
+    div.addEventListener('blur', save, { once: true });
+    div.addEventListener('keydown', e => {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); div.blur(); }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        div.removeEventListener('blur', save);
+        div.setAttribute('contenteditable', 'false');
+        // Restore original text
+        div.innerHTML = escHtml(row.baihuan) + ``;
+        div.setAttribute('onclick', `makeZhEditable(${id})`);
+      }
+    });
+  }
+
+  function saveZhEdit(id, div, row) {
+    div.setAttribute('contenteditable', 'false');
+    const newText = div.innerText.trim();
+    if (!newText || newText === row.baihuan) {
+      // No change — restore onclick
+      div.setAttribute('onclick', `makeZhEditable(${id})`);
+      return;
+    }
+    row.baihuan = newText;
+    // Re-render with updated text and onclick
+    const cell = document.getElementById(`zh-cell-${id}`);
+    if (cell) cell.innerHTML = `<div class="cell-text chinese-text" onclick="makeZhEditable(${id})" title="Click to edit">${escHtml(newText)}</div>`;
+    writeRowToFirebase(id, { source: row.source, baihuan: newText, en: row.en, displayNum: row.displayNum, streaming: false });
+    setStatus('ready', 'Chinese text saved');
   }
 
   // ── Edit completed row ──
@@ -876,8 +941,9 @@
         : document.getElementById(`en-cell-${id}`);
       if (!cell) return;
       const cls = outputId === 'baihuan-output' ? 'chinese-text' : 'english-text';
+      const editAttr = (!streaming && outputId === 'baihuan-output') ? ` onclick="makeZhEditable(${id})" title="Click to edit"` : '';
       cell.innerHTML = text
-        ? `<div class="cell-text ${cls}">${escHtml(text)}${streaming && outputId === 'baihuan-output' ? '<span class="streaming-cursor"></span>' : ''}</div>`
+        ? `<div class="cell-text ${cls}"${editAttr}>${escHtml(text)}${streaming && outputId === 'baihuan-output' ? '<span class="streaming-cursor"></span>' : ''}</div>`
         : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
     };
     const onProgress = ({ bh, en, streaming }) => {
@@ -1009,7 +1075,7 @@
       </div>
       <div class="cell cell-chinese" id="zh-cell-${row.id}" data-label="Modern Chinese">
         ${row.baihuan
-          ? `<div class="cell-text chinese-text">${escHtml(row.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
+          ? `<div class="cell-text chinese-text"${!streaming ? ` onclick="makeZhEditable(${row.id})" title="Click to edit"` : ''}>${escHtml(row.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
           : '<div class="cell-spinner"><div class="row-spinner"></div></div>'}
       </div>
       <div class="cell cell-english" id="en-cell-${row.id}" data-label="English">
@@ -1037,7 +1103,7 @@
     const en = document.getElementById(`en-cell-${id}`);
     if (rd.baihuan !== undefined && zh)
       zh.innerHTML = rd.baihuan
-        ? `<div class="cell-text chinese-text">${escHtml(rd.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
+        ? `<div class="cell-text chinese-text"${!streaming ? ` onclick="makeZhEditable(${id})" title="Click to edit"` : ''}>${escHtml(rd.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
         : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
     if (rd.en !== undefined && en)
       en.innerHTML = rd.en ? `<div class="cell-text english-text">${escHtml(rd.en)}</div>` : '';
