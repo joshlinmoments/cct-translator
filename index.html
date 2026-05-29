@@ -495,7 +495,7 @@
   let style    = localStorage.getItem('cct_style')    || 'scholarly';
 
   // ── Firebase (hardcoded URL visible to all visitors) ──
-  const FIREBASE_URL = ''; // ← 取得 Firebase URL 後填入此處
+  const FIREBASE_URL = 'https://cct-translator-default-rtdb.firebaseio.com';
   let firebaseUrl = localStorage.getItem('cct_firebase') || FIREBASE_URL;
   let fbSource    = null;  // EventSource subscription
   let fbThrottle  = null;  // throttle timer
