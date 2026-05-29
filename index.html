@@ -580,8 +580,8 @@
   let currentMode = 'browse';
 
   // ── Row state ──
-  let rows = [];   // [{ id, source, baihuan, en, status }]
-  let nextId = 1;
+  let rows = [];        // [{ id, displayNum, source, baihuan, en, status }]
+  let displayCounter = 1; // sequential row number shown in UI
 
   // ── Column visibility ──
   const colVis = { source: true, zh: true, en: true };
@@ -665,8 +665,9 @@
 
   // ── Row management ──
   function addRow(autoFocus = true) {
-    const id = nextId++;
-    const row = { id, source: '', baihuan: '', en: '', status: 'active' };
+    const id = Date.now();             // unique across all collaborators
+    const displayNum = displayCounter++;
+    const row = { id, displayNum, source: '', baihuan: '', en: '', status: 'active' };
     rows.push(row);
 
     const container = document.getElementById('rows-scroll');
@@ -675,7 +676,7 @@
     el.id = `row-${id}`;
     el.innerHTML = `
       <div class="cell cell-source" data-label="Source">
-        <span class="row-num">${id}</span>
+        <span class="row-num">${displayNum}</span>
         <textarea id="src-${id}"
           placeholder="Type classical Chinese here, then press ↵ Enter to translate…"
           onkeydown="handleRowKeyDown(${id}, event)"
@@ -735,7 +736,7 @@
     if (!el) return;
     el.className = 'tr-row loading';
     el.querySelector('.cell-source').innerHTML =
-      `<span class="row-num">${id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})">${escHtml(sourceText)}</div>`;
+      `<span class="row-num">${row.displayNum}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})">${escHtml(sourceText)}</div>`;
 
     const zhCell = document.getElementById(`zh-cell-${id}`);
     const enCell = document.getElementById(`en-cell-${id}`);
@@ -783,11 +784,10 @@
 
       row.status = 'done';
       el.className = 'tr-row done';
-      // Make source text clickable for editing
       const sc = el.querySelector('.cell-source');
-      if (sc) sc.innerHTML = `<span class="row-num">${id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(sourceText)}</div>`;
-      writeRowToFirebase(id, { source: sourceText, baihuan: row.baihuan, en: row.en, streaming: false });
-      setStatus('ready', `Row ${id} done`);
+      if (sc) sc.innerHTML = `<span class="row-num">${row.displayNum}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(sourceText)}</div>`;
+      writeRowToFirebase(id, { source: sourceText, baihuan: row.baihuan, en: row.en, displayNum: row.displayNum, streaming: false });
+      setStatus('ready', `Done`);
 
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -844,7 +844,7 @@
     if (!el || !el.classList.contains('editing')) return;
     el.classList.remove('editing');
     el.querySelector('.cell-source').innerHTML =
-      `<span class="row-num">${id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(row.source)}</div>`;
+      `<span class="row-num">${row.displayNum||id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(row.source)}</div>`;
   }
 
   async function retranslateRow(id, newText) {
@@ -858,7 +858,7 @@
     el.classList.remove('editing');
     el.className = 'tr-row loading';
     el.querySelector('.cell-source').innerHTML =
-      `<span class="row-num">${id}</span><div class="cell-text source-text">${escHtml(newText)}</div>`;
+      `<span class="row-num">${row.displayNum||id}</span><div class="cell-text source-text">${escHtml(newText)}</div>`;
 
     const zhCell = document.getElementById(`zh-cell-${id}`);
     const enCell = document.getElementById(`en-cell-${id}`);
@@ -893,9 +893,9 @@
       row.status = 'done';
       el.className = 'tr-row done';
       el.querySelector('.cell-source').innerHTML =
-        `<span class="row-num">${id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(newText)}</div>`;
-      writeRowToFirebase(id, { source: newText, baihuan: row.baihuan, en: row.en, streaming: false });
-      setStatus('ready', `Row ${id} updated`);
+        `<span class="row-num">${row.displayNum||id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(newText)}</div>`;
+      writeRowToFirebase(id, { source: newText, baihuan: row.baihuan, en: row.en, displayNum: row.displayNum, streaming: false });
+      setStatus('ready', `Updated`);
     } catch (err) {
       if (err.name === 'AbortError') return;
       row.status = 'error';
@@ -917,7 +917,7 @@
   // ── New session ──
   function confirmNewSession() {
     if (!confirm('Clear all rows and start a new session?')) return;
-    rows = []; nextId = 1;
+    rows = []; displayCounter = 1;
     document.getElementById('rows-scroll').innerHTML = '';
     document.getElementById('char-count').textContent = '';
     if (firebaseUrl && apiKey) fetch(`${firebaseUrl}/rows.json`, { method: 'DELETE' }).catch(() => {});
@@ -925,7 +925,7 @@
     setStatus('ready', 'New session started');
   }
 
-  // ── Firebase sync (Browse mode) ──
+  // ── Firebase sync (Browse + collaborative Edit) ──
   function initFirebase() {
     if (fbSource) { fbSource.close(); fbSource = null; }
     if (!firebaseUrl) return;
@@ -935,14 +935,11 @@
     fbSource.addEventListener('put', e => {
       try {
         const { path, data } = JSON.parse(e.data);
-        if (currentMode === 'edit') return;
         if (!data) return;
         if (path && path.length > 1) {
-          // Single-row initial put: path = "/3", data = row object
           const id = parseInt(path.slice(1));
-          if (!isNaN(id)) updateBrowseRow(id, data);
+          if (!isNaN(id)) mergeRemoteRow(id, data);
         } else {
-          // Full dataset: data = { "1": {...}, "2": {...} }
           renderBrowseAll(data);
         }
         setStatus('ready', 'Live');
@@ -952,15 +949,13 @@
     fbSource.addEventListener('patch', e => {
       try {
         const { path, data } = JSON.parse(e.data);
-        if (currentMode === 'edit' || !data) return;
+        if (!data) return;
         if (path && path.length > 1) {
-          // Single row update: path = "/3", data = { source, baihuan, en, streaming }
           const id = parseInt(path.slice(1));
-          if (!isNaN(id)) updateBrowseRow(id, data);
+          if (!isNaN(id)) mergeRemoteRow(id, data);
         } else {
-          // Multiple rows: data = { "1": {...}, "2": {...} }
           Object.entries(data).forEach(([key, rowData]) => {
-            if (rowData && typeof rowData === 'object') updateBrowseRow(parseInt(key), rowData);
+            if (rowData && typeof rowData === 'object') mergeRemoteRow(parseInt(key), rowData);
           });
         }
         setStatus('ready', 'Live');
@@ -968,18 +963,38 @@
     });
   }
 
+  // Merge a remote row into local state — skip our own active row to avoid self-overwrite
+  function mergeRemoteRow(id, rd) {
+    const localRow = rows.find(r => r.id === id);
+    if (localRow && localRow.status === 'active') return; // we're typing in this row
+    updateBrowseRow(id, rd);
+  }
+
   function renderBrowseAll(data) {
-    const container = document.getElementById('rows-scroll');
-    container.innerHTML = ''; rows = [];
     const entries = Object.entries(data).sort(([a],[b]) => parseInt(a) - parseInt(b));
+
+    if (currentMode === 'edit') {
+      // Collaborative: merge remote rows without clearing local state
+      for (const [key, rd] of entries) {
+        const id = parseInt(key);
+        const localRow = rows.find(r => r.id === id);
+        if (localRow && localRow.status === 'active') continue;
+        updateBrowseRow(id, rd);
+      }
+      return;
+    }
+
+    // Browse mode: full replace
+    const container = document.getElementById('rows-scroll');
+    container.innerHTML = ''; rows = []; displayCounter = 1;
     for (const [key, rd] of entries) {
       const id = parseInt(key);
-      if (id >= nextId) nextId = id + 1;
-      const row = { id, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: rd.streaming ? 'loading' : 'done' };
+      const displayNum = rd.displayNum || displayCounter++;
+      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: rd.streaming ? 'loading' : 'done' };
       rows.push(row);
       appendBrowseRow(row, !!rd.streaming);
     }
-    scrollToBottom(true); // force on initial full load
+    scrollToBottom(true);
   }
 
   function appendBrowseRow(row, streaming) {
@@ -989,7 +1004,7 @@
     el.className = `tr-row ${streaming ? 'loading' : 'done'}`;
     el.innerHTML = `
       <div class="cell cell-source" data-label="Source">
-        <span class="row-num">${row.id}</span>
+        <span class="row-num">${row.displayNum||row.id}</span>
         <div class="cell-text source-text" onclick="makeRowEditable(${row.id})" title="Click to edit">${escHtml(row.source)}</div>
       </div>
       <div class="cell cell-chinese" id="zh-cell-${row.id}" data-label="Modern Chinese">
@@ -1009,10 +1024,10 @@
     let el = document.getElementById(`row-${id}`);
     const isNewRow = !el;
     if (isNewRow) {
-      const row = { id, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: 'loading' };
+      const displayNum = rd.displayNum || displayCounter++;
+      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: rd.streaming ? 'loading' : 'done' };
       rows.push(row);
-      if (id >= nextId) nextId = id + 1;
-      appendBrowseRow(row, true);
+      appendBrowseRow(row, !!rd.streaming);
       el = document.getElementById(`row-${id}`);
     }
     if (!el) return;
