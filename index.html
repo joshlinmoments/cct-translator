@@ -308,6 +308,78 @@
 
     .error-text { color: #c0392b; font-size: 14px; }
 
+    /* ── Panel visibility ── */
+    .panel.hidden { display: none; }
+
+    /* Desktop panel chips (in status bar) */
+    .panel-chips { display: flex; gap: 4px; margin-left: 10px; }
+    .chip {
+      padding: 2px 9px;
+      border-radius: 10px;
+      font-size: 10px;
+      border: 1px solid #ddd9d0;
+      background: #f5f3ee;
+      color: #aaa;
+      cursor: pointer;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .chip.active { background: #2a2a2a; color: #fff; border-color: #2a2a2a; }
+    .chip:hover:not(.active) { color: #555; border-color: #bbb; }
+
+    /* Mobile tab bar (hidden on desktop) */
+    .panel-tabs {
+      display: none;
+      flex-shrink: 0;
+      background: #fff;
+      border-bottom: 1px solid #ddd9d0;
+    }
+    .ptab {
+      flex: 1;
+      padding: 11px 4px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #bbb;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.18s;
+      letter-spacing: 0.3px;
+    }
+    .ptab.active { color: #1e1e1e; border-bottom-color: #1e1e1e; font-weight: 600; }
+
+    /* ── Mobile responsive ── */
+    @media (max-width: 767px) {
+      body { height: 100dvh; overflow: hidden; }
+
+      header { height: auto; padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+      .header-left { gap: 8px; }
+      .title { font-size: 14px; letter-spacing: 2px; }
+      .subtitle { display: none; }
+      .header-right { gap: 6px; }
+      .mode-toggle { padding: 2px; }
+      .mode-btn { padding: 3px 8px; font-size: 11px; }
+      .settings-btn { padding: 4px 10px; font-size: 12px; }
+
+      .panel-tabs { display: flex; }
+      .panel-chips { display: none; }
+
+      .main { grid-template-columns: 1fr !important; overflow: hidden; }
+      .panel { display: none !important; border-right: none; }
+      .panel.mobile-active { display: flex !important; }
+
+      textarea { font-size: 16px; padding: 16px 14px; letter-spacing: 1px; line-height: 1.9; }
+      .output-content { font-size: 15px; padding: 16px 14px; }
+
+      .statusbar { padding: 0 14px; }
+
+      /* Modal full screen on mobile */
+      .modal { width: 100%; max-width: 100vw; border-radius: 14px 14px 0 0; padding: 28px 20px; position: fixed; bottom: 0; left: 0; right: 0; }
+      .overlay.open { align-items: flex-end; }
+    }
+
     /* ── Mode toggle ── */
     .header-right { display: flex; align-items: center; gap: 10px; }
 
@@ -378,6 +450,13 @@
   </div>
 </header>
 
+<!-- Mobile tab bar -->
+<div class="panel-tabs" id="panel-tabs">
+  <button class="ptab active" id="ptab-input"   onclick="activateTab('input')">📝 原文</button>
+  <button class="ptab"        id="ptab-baihuan" onclick="activateTab('baihuan')">📖 白話</button>
+  <button class="ptab"        id="ptab-english" onclick="activateTab('english')">🌐 English</button>
+</div>
+
 <div class="main">
 
   <!-- Panel 1: Input -->
@@ -428,6 +507,11 @@
 <div class="statusbar">
   <div class="dot" id="status-dot"></div>
   <span id="status-text">請先設定 API Key</span>
+  <div class="panel-chips" id="panel-chips">
+    <button class="chip active" id="chip-input"   onclick="togglePanel('input')">原文</button>
+    <button class="chip active" id="chip-baihuan" onclick="togglePanel('baihuan')">白話</button>
+    <button class="chip active" id="chip-english" onclick="togglePanel('english')">English</button>
+  </div>
   <span class="char-count" id="char-count"></span>
 </div>
 
@@ -507,6 +591,47 @@
   let baihuanEdited    = false;
   let enOnlyTimer      = null;
   let enOnlyAbort      = null;
+
+  // ── Panel visibility ──
+  let panels = { input: true, baihuan: true, english: true };
+  let mobileActiveTab = 'input';
+
+  function isMobile() { return window.innerWidth < 768; }
+
+  function togglePanel(name) {
+    const visible = Object.values(panels).filter(Boolean).length;
+    if (panels[name] && visible === 1) return; // keep at least one
+    panels[name] = !panels[name];
+    applyPanelVisibility();
+  }
+
+  function activateTab(name) {
+    mobileActiveTab = name;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('mobile-active'));
+    document.querySelector(`.${name}-panel`).classList.add('mobile-active');
+    ['input','baihuan','english'].forEach(n =>
+      document.getElementById(`ptab-${n}`).classList.toggle('active', n === name)
+    );
+  }
+
+  function applyPanelVisibility() {
+    const names = ['input','baihuan','english'];
+    names.forEach(name => {
+      document.querySelector(`.${name}-panel`).classList.toggle('hidden', !panels[name]);
+      document.getElementById(`chip-${name}`).classList.toggle('active', panels[name]);
+    });
+    const count = Object.values(panels).filter(Boolean).length;
+    document.querySelector('.main').style.gridTemplateColumns = `repeat(${count}, 1fr)`;
+  }
+
+  window.addEventListener('resize', () => {
+    if (isMobile()) {
+      activateTab(mobileActiveTab);
+    } else {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('mobile-active'));
+      applyPanelVisibility();
+    }
+  });
 
   function setMode(mode) {
     currentMode = mode;
@@ -597,6 +722,11 @@
     document.getElementById('model-select').value    = model;
     updateProviderLabels(provider);
     initFirebase();
+    if (isMobile()) {
+      activateTab('input');
+    } else {
+      applyPanelVisibility();
+    }
     if (apiKey) {
       setStatus('ready', '就緒');
     } else if (firebaseUrl) {
@@ -709,6 +839,7 @@
     setOutput('baihuan-output', null, true, true);
     setOutput('english-output', null, true, true);
     writeToFirebase({ input: text, baihuan: '', english: '', streaming: true });
+    if (isMobile()) activateTab('baihuan');
 
     const onProgress = ({ bh, en, streaming }) =>
       writeToFirebase({ input: text, baihuan: bh, english: en, streaming });
