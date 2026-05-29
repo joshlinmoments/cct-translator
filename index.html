@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文言文 AI 即時翻譯</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Songti SC', 'Noto Serif TC', Georgia, serif;
+      background: #f5f3ee;
+      color: #2a2a2a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1e1e1e;
+      color: #f0ece4;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-left { display: flex; align-items: baseline; gap: 12px; }
+
+    .title {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 3px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.45;
+      letter-spacing: 1px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .settings-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.7);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      transition: all 0.18s;
+      letter-spacing: 0.5px;
+    }
+
+    .settings-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    /* ── Three-panel grid ── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #ddd9d0;
+      overflow: hidden;
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 11px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid #ddd9d0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .panel-header .icon { font-size: 14px; }
+
+    .badge {
+      margin-left: auto;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .input-panel .badge  { background: #e6f4e6; color: #2a6a2a; }
+    .baihuan-panel .badge { background: #e6edfb; color: #2a4a9a; }
+    .english-panel .badge { background: #fef2e0; color: #8a5010; }
+
+    textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 28px 24px;
+      font-size: 20px;
+      line-height: 2;
+      font-family: inherit;
+      background: #fafaf7;
+      color: #1e1e1e;
+      letter-spacing: 2px;
+    }
+
+    textarea::placeholder { color: #c0bbb0; }
+
+    .output-scroll {
+      flex: 1;
+      overflow-y: auto;
+      background: #fafaf7;
+    }
+
+    .output-content {
+      padding: 28px 24px;
+      font-size: 16px;
+      line-height: 2;
+      white-space: pre-wrap;
+      word-break: normal;
+      overflow-wrap: break-word;
+      min-height: 100%;
+      letter-spacing: 0.5px;
+    }
+
+    .placeholder {
+      color: #b8b2a8;
+      font-style: italic;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #aaa;
+      font-size: 14px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid #e0ddd5;
+      border-top-color: #aaa;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: #999;
+      vertical-align: text-bottom;
+      margin-left: 1px;
+      animation: blink 0.65s step-end infinite;
+    }
+
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* ── Status bar ── */
+    .statusbar {
+      height: 30px;
+      padding: 0 20px;
+      background: #fff;
+      border-top: 1px solid #ddd9d0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #999;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+    }
+    .dot.ready   { background: #52c41a; }
+    .dot.loading { background: #fa8c16; animation: pulse 1s ease infinite; }
+    .dot.error   { background: #f5222d; }
+
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    .char-count { margin-left: auto; color: #ccc; }
+
+    /* ── Modal ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      padding: 36px;
+      width: 500px;
+      max-width: 94vw;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .modal h2 {
+      font-size: 17px;
+      margin-bottom: 26px;
+      color: #1e1e1e;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: #555;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid #e0ddd5;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.18s;
+      background: #fafaf7;
+      color: #1e1e1e;
+    }
+
+    .field input:focus, .field select:focus { border-color: #888; background: #fff; }
+
+    .api-note {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 28px;
+    }
+
+    .btn-cancel {
+      padding: 9px 22px;
+      border: 1.5px solid #e0ddd5;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #888;
+      transition: all 0.18s;
+    }
+    .btn-cancel:hover { background: #f5f3ee; }
+
+    .btn-save {
+      padding: 9px 22px;
+      background: #1e1e1e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.18s;
+    }
+    .btn-save:hover { background: #3a3a3a; }
+
+    .error-text { color: #c0392b; font-size: 14px; }
+
+    /* ── Mode toggle ── */
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .mode-toggle {
+      display: flex;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 7px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.45);
+      padding: 4px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      transition: all 0.18s;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .mode-btn.active {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+    .mode-btn:hover:not(.active) { color: rgba(255,255,255,0.7); }
+
+    /* browse mode: lock input */
+    body.browse-mode #input-text { cursor: default; color: #666; }
+    body.browse-mode .input-panel .badge::before { content: '🔒 '; }
+
+    /* editable baihuan */
+    #baihuan-output[contenteditable="true"] {
+      outline: none;
+      cursor: text;
+      caret-color: #4a6fa5;
+    }
+    #baihuan-output[contenteditable="true"]:focus {
+      background: #f0f4ff;
+    }
+    .baihuan-panel .panel-header.editable-hint::after {
+      content: '可編輯';
+      font-size: 10px;
+      color: #7a9ad0;
+      font-weight: normal;
+      margin-left: 4px;
+      letter-spacing: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="title">文言文 AI 即時翻譯</div>
+    <div class="subtitle">Classical Chinese Real-Time AI Translator</div>
+  </div>
+  <div class="header-right">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-browse" onclick="setMode('browse')">👁 瀏覽</button>
+      <button class="mode-btn"        id="btn-edit"   onclick="setMode('edit')">✏ 編輯</button>
+    </div>
+    <button class="settings-btn" onclick="openSettings()">⚙ API 設定</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Panel 1: Input -->
+  <div class="panel input-panel">
+    <div class="panel-header">
+      <span class="icon">✏️</span>
+      原文輸入
+      <span class="badge">文言文</span>
+    </div>
+    <textarea
+      id="input-text"
+      placeholder="在此輸入文言文或古文…&#10;&#10;例如：&#10;學而時習之，不亦說乎？&#10;有朋自遠方來，不亦樂乎？"
+      oninput="handleInput()"
+      autofocus
+    ></textarea>
+  </div>
+
+  <!-- Panel 2: Modern Chinese -->
+  <div class="panel baihuan-panel">
+    <div class="panel-header" id="baihuan-header">
+      <span class="icon">📖</span>
+      白話文註釋
+      <span class="badge">現代中文</span>
+    </div>
+    <div class="output-scroll">
+      <div class="output-content" id="baihuan-output" oninput="handleBaihuanEdit()">
+        <span class="placeholder">白話文說明將在此顯示…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 3: English -->
+  <div class="panel english-panel">
+    <div class="panel-header">
+      <span class="icon">🌐</span>
+      English Translation
+      <span class="badge">English</span>
+    </div>
+    <div class="output-scroll">
+      <div class="output-content" id="english-output">
+        <span class="placeholder">English translation will appear here…</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="statusbar">
+  <div class="dot" id="status-dot"></div>
+  <span id="status-text">請先設定 API Key</span>
+  <span class="char-count" id="char-count"></span>
+</div>
+
+<!-- Settings Modal -->
+<div class="overlay" id="settings-overlay">
+  <div class="modal">
+    <h2>⚙ API 設定</h2>
+
+    <div class="field">
+      <label>翻譯服務</label>
+      <select id="provider-select" onchange="onProviderChange()">
+        <option value="openrouter">OpenRouter（免費模型可用）</option>
+        <option value="gemini">Google Gemini（AI Studio API）</option>
+        <option value="anthropic">Anthropic Claude（付費）</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label id="apikey-label">Google AI Studio API Key</label>
+      <input type="password" id="api-key-input" placeholder="AIza…" />
+      <div class="api-note" id="apikey-note">
+        免費取得：前往 <strong>aistudio.google.com</strong> → 左上角「Get API key」→ 複製貼上。<br>
+        Key 僅存於本機 localStorage，不會傳送至第三方。
+      </div>
+    </div>
+
+    <div class="field">
+      <label>翻譯模型</label>
+      <select id="model-select" onchange="onModelChange()"></select>
+    </div>
+    <div class="field" id="custom-model-field" style="display:none; margin-top:-10px;">
+      <label>自訂模型 ID</label>
+      <input type="text" id="custom-model-input" placeholder="例：google/gemini-2.0-flash-exp:free" />
+      <div class="api-note">在 <strong>openrouter.ai/models</strong> 找到想用的模型，複製其 ID 貼上。</div>
+    </div>
+
+    <div class="field">
+      <label>詮釋風格</label>
+      <select id="style-select">
+        <option value="scholarly">字義精準（貼近原文）</option>
+        <option value="accessible">淺白口語（自然易讀）</option>
+        <option value="poetic">詩意優美（保留意境）</option>
+        <option value="tao">道家義理（一貫道詮釋）</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">取消</button>
+      <button class="btn-save" onclick="saveSettings()">儲存設定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  let provider = localStorage.getItem('cct_provider') || 'openrouter';
+  let apiKey   = localStorage.getItem('cct_api_key')  || '';
+  let model    = localStorage.getItem('cct_model')    || 'google/gemini-2.0-flash-exp:free';
+  let style    = localStorage.getItem('cct_style')    || 'scholarly';
+  let debounceTimer    = null;
+  let currentAbort     = null;
+  let currentMode      = 'browse';
+  let baihuanEdited    = false;
+  let enOnlyTimer      = null;
+  let enOnlyAbort      = null;
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-browse').classList.toggle('active', mode === 'browse');
+    document.getElementById('btn-edit').classList.toggle('active', mode === 'edit');
+    document.body.classList.toggle('browse-mode', mode === 'browse');
+
+    const inputEl   = document.getElementById('input-text');
+    const baihuanEl = document.getElementById('baihuan-output');
+    const bhHeader  = document.getElementById('baihuan-header');
+
+    inputEl.readOnly        = (mode === 'browse');
+    baihuanEl.contentEditable = (mode === 'edit') ? 'true' : 'false';
+    bhHeader.classList.toggle('editable-hint', mode === 'edit');
+  }
+
+  const MODELS = {
+    openrouter: [
+      { value: 'deepseek/deepseek-chat-v3-0324:free',    label: 'DeepSeek V3（免費，中文極強，推薦）' },
+      { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B（免費）' },
+      { value: 'qwen/qwen-2.5-72b-instruct:free',        label: 'Qwen 2.5 72B（免費，中文佳）' },
+      { value: '__custom__',                             label: '✏ 自訂模型 ID…' },
+    ],
+    gemini: [
+      { value: 'gemini-2.5-flash',   label: 'Gemini 2.5 Flash（推薦）' },
+      { value: 'gemini-2.0-flash',   label: 'Gemini 2.0 Flash（快速）' },
+      { value: 'gemini-2.5-pro',     label: 'Gemini 2.5 Pro（最強）' },
+    ],
+    anthropic: [
+      { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6（推薦）' },
+      { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5（最快）' },
+      { value: 'claude-opus-4-7',           label: 'Claude Opus 4.7（最高品質）' },
+    ]
+  };
+
+  // ── Init ──
+  window.onload = () => {
+    setMode('browse');
+    renderModelOptions(provider);
+    document.getElementById('provider-select').value = provider;
+    document.getElementById('model-select').value    = model;
+    updateProviderLabels(provider);
+    if (apiKey) {
+      setStatus('ready', '就緒');
+    } else {
+      openSettings();
+    }
+  };
+
+  function renderModelOptions(p) {
+    const sel = document.getElementById('model-select');
+    sel.innerHTML = MODELS[p].map(m =>
+      `<option value="${m.value}">${m.label}</option>`
+    ).join('');
+  }
+
+  function updateProviderLabels(p) {
+    const label = document.getElementById('apikey-label');
+    const note  = document.getElementById('apikey-note');
+    const input = document.getElementById('api-key-input');
+    if (p === 'openrouter') {
+      label.textContent = 'OpenRouter API Key';
+      input.placeholder = 'sk-or-v1-…';
+      note.innerHTML = '免費取得：前往 <strong>openrouter.ai</strong> → 登入 → 左側「Keys」→ Create Key（不需綁卡）。<br>Key 僅存於本機 localStorage。';
+    } else if (p === 'gemini') {
+      label.textContent = 'Google AI Studio API Key';
+      input.placeholder = 'AIza…';
+      note.innerHTML = '免費取得：前往 <strong>aistudio.google.com</strong> → 左上角「Get API key」→ 複製貼上。<br>Key 僅存於本機 localStorage。';
+    } else {
+      label.textContent = 'Anthropic API Key';
+      input.placeholder = 'sk-ant-api03-…';
+      note.innerHTML = '前往 <strong>console.anthropic.com</strong> → API Keys → Create Key。<br>Key 僅存於本機 localStorage。';
+    }
+  }
+
+  function onProviderChange() {
+    const p = document.getElementById('provider-select').value;
+    renderModelOptions(p);
+    updateProviderLabels(p);
+    document.getElementById('custom-model-field').style.display = 'none';
+  }
+
+  function onModelChange() {
+    const val = document.getElementById('model-select').value;
+    document.getElementById('custom-model-field').style.display =
+      val === '__custom__' ? 'block' : 'none';
+  }
+
+  // ── Input handler ──
+  function handleInput() {
+    if (currentMode !== 'edit') return;
+    const raw   = document.getElementById('input-text').value;
+    const text  = raw.trim();
+    document.getElementById('char-count').textContent = raw.length ? `${raw.length} 字` : '';
+
+    clearTimeout(debounceTimer);
+
+    if (!text) {
+      resetOutputs();
+      setStatus('ready', '就緒');
+      return;
+    }
+
+    setStatus('loading', '等待輸入…');
+
+    debounceTimer = setTimeout(() => {
+      if (!apiKey) { openSettings(); return; }
+      translate(text);
+    }, 750);
+  }
+
+  function resetOutputs() {
+    setOutput('baihuan-output', null, false);
+    setOutput('english-output', null, false);
+  }
+
+  // ── System prompt ──
+  function buildSystemPrompt() {
+    const tones = {
+      scholarly:  '翻譯用詞精準，貼近字義。',
+      accessible: '翻譯用語淺白自然，口語化。',
+      poetic:     '翻譯保留詩意與節奏，文字優美。',
+      tao:        '翻譯從一貫道義理角度出發，體現道、理、天命等意涵。'
+    };
+    return `你是一位精通文言文的翻譯家。任務是直接翻譯，不加任何解釋、背景說明或注釋。
+翻譯風格：${tones[style]}
+
+輸出規則（嚴格遵守）：
+- 只輸出下列三行分隔符與翻譯內容，其餘一字不得出現
+- ##BAIHUAN## 後面接繁體中文白話翻譯
+- ##ENGLISH## 後面接英文翻譯
+- 最後以 ##END## 結尾
+
+格式範例：
+##BAIHUAN##
+（繁體中文翻譯）
+##ENGLISH##
+（English translation）
+##END##`;
+  }
+
+  // ── Streaming translation (dispatcher) ──
+  async function translate(text) {
+    baihuanEdited = false;
+    if (enOnlyAbort) { enOnlyAbort.abort(); enOnlyAbort = null; }
+    if (currentAbort) currentAbort.abort();
+    currentAbort = new AbortController();
+
+    setStatus('loading', '翻譯中…');
+    setOutput('baihuan-output', null, true, true);
+    setOutput('english-output', null, true, true);
+
+    try {
+      if (provider === 'openrouter') {
+        await translateOpenRouter(text, currentAbort.signal);
+      } else if (provider === 'gemini') {
+        await translateGemini(text, currentAbort.signal);
+      } else {
+        await translateAnthropic(text, currentAbort.signal);
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      setStatus('error', `錯誤：${err.message}`);
+      renderError('baihuan-output', `翻譯失敗：${err.message}`);
+      renderError('english-output', `Translation failed: ${err.message}`);
+    }
+  }
+
+  // ── Anthropic Claude ──
+  async function translateAnthropic(text, signal) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 2048,
+        stream: true,
+        system: buildSystemPrompt(),
+        messages: [{ role: 'user', content: text }]
+      }),
+      signal
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    await readSSEStream(res, chunk => {
+      try {
+        const evt = JSON.parse(chunk);
+        if (evt.type === 'content_block_delta' && evt.delta?.text) return evt.delta.text;
+        if (evt.type === 'message_stop') return null; // signals done
+      } catch (_) {}
+      return undefined; // skip
+    });
+  }
+
+  // ── Google Gemini ──
+  async function translateGemini(text, signal) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: buildSystemPrompt() }] },
+        contents: [{ role: 'user', parts: [{ text }] }],
+        generationConfig: { maxOutputTokens: 2048 }
+      }),
+      signal
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    await readSSEStream(res, chunk => {
+      try {
+        const evt = JSON.parse(chunk);
+        const part = evt.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (part !== undefined) return part;
+        if (evt.candidates?.[0]?.finishReason === 'STOP') return null;
+      } catch (_) {}
+      return undefined;
+    });
+  }
+
+  // ── OpenRouter (OpenAI-compatible) ──
+  async function translateOpenRouter(text, signal) {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://localhost',
+        'X-Title': 'Classical Chinese Translator'
+      },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        max_tokens: 2048,
+        messages: [
+          { role: 'system', content: buildSystemPrompt() },
+          { role: 'user',   content: text }
+        ]
+      }),
+      signal
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    await readSSEStream(res, chunk => {
+      if (chunk === '[DONE]') return null;
+      try {
+        const evt = JSON.parse(chunk);
+        const delta = evt.choices?.[0]?.delta?.content;
+        if (delta !== undefined && delta !== null) return delta;
+        if (evt.choices?.[0]?.finish_reason === 'stop') return null;
+      } catch (_) {}
+      return undefined;
+    });
+  }
+
+  // ── Generic SSE reader ──
+  // parser(rawData) → string (append text) | null (done) | undefined (skip)
+  async function readSSEStream(res, parser) {
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let sseBuffer = '';
+    let fullText  = '';
+    let prevBh = '', prevEn = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        const result = parser(data);
+        if (result === null) {
+          // stream complete — final render
+          const { bh, en } = parseSections(fullText);
+          setOutput('baihuan-output', bh, false);
+          setOutput('english-output', en, false);
+          setStatus('ready', '翻譯完成 ✓');
+          return;
+        }
+        if (result !== undefined) {
+          fullText += result;
+          const { bh, bhDone, en, enDone } = parseSections(fullText);
+          if (bh !== prevBh) { prevBh = bh; setOutput('baihuan-output', bh, !bhDone); }
+          if (en !== prevEn) { prevEn = en; setOutput('english-output',  en, !enDone); }
+        }
+      }
+    }
+
+    // Fallback final render if stream ended without explicit stop event
+    const { bh, en } = parseSections(fullText);
+    setOutput('baihuan-output', bh, false);
+    setOutput('english-output', en, false);
+    setStatus('ready', '翻譯完成 ✓');
+  }
+
+  // ── Baihuan manual edit → English only ──
+  function handleBaihuanEdit() {
+    if (currentMode !== 'edit') return;
+    baihuanEdited = true;
+    if (currentAbort) { currentAbort.abort(); currentAbort = null; }
+
+    clearTimeout(enOnlyTimer);
+    setStatus('loading', '根據白話文更新英文…');
+
+    enOnlyTimer = setTimeout(() => {
+      const bh = document.getElementById('baihuan-output').innerText.trim();
+      if (!bh) return;
+      if (!apiKey) { openSettings(); return; }
+      translateEnglishOnly(bh);
+    }, 750);
+  }
+
+  async function translateEnglishOnly(baihuanText) {
+    if (enOnlyAbort) enOnlyAbort.abort();
+    enOnlyAbort = new AbortController();
+    const signal = enOnlyAbort.signal;
+
+    setOutput('english-output', null, true, true);
+
+    const sysPrompt = '你是翻譯家。將繁體中文直接翻譯成自然流暢的英文。只輸出英文翻譯，不加任何說明、標記或格式符號。';
+
+    try {
+      let res;
+      if (provider === 'openrouter') {
+        res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': 'https://localhost',
+            'X-Title': 'Classical Chinese Translator'
+          },
+          body: JSON.stringify({
+            model, stream: true, max_tokens: 1024,
+            messages: [
+              { role: 'system', content: sysPrompt },
+              { role: 'user',   content: baihuanText }
+            ]
+          }),
+          signal
+        });
+      } else if (provider === 'gemini') {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: sysPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: baihuanText }] }],
+            generationConfig: { maxOutputTokens: 1024 }
+          }),
+          signal
+        });
+      } else {
+        res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model, max_tokens: 1024, stream: true,
+            system: sysPrompt,
+            messages: [{ role: 'user', content: baihuanText }]
+          }),
+          signal
+        });
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+      let fullText  = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+
+          let chunk, isDone = false;
+          try {
+            if (data === '[DONE]') { isDone = true; }
+            else {
+              const evt = JSON.parse(data);
+              if (provider === 'gemini') {
+                chunk = evt.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (evt.candidates?.[0]?.finishReason === 'STOP') isDone = true;
+              } else if (provider === 'anthropic') {
+                if (evt.type === 'content_block_delta') chunk = evt.delta?.text;
+                if (evt.type === 'message_stop') isDone = true;
+              } else {
+                chunk = evt.choices?.[0]?.delta?.content;
+                if (evt.choices?.[0]?.finish_reason === 'stop') isDone = true;
+              }
+            }
+          } catch (_) {}
+
+          if (chunk) { fullText += chunk; setOutput('english-output', fullText, true); }
+          if (isDone) {
+            setOutput('english-output', fullText, false);
+            setStatus('ready', '英文翻譯已更新 ✓');
+            return;
+          }
+        }
+      }
+
+      setOutput('english-output', fullText, false);
+      setStatus('ready', '英文翻譯已更新 ✓');
+
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      setStatus('error', `錯誤：${err.message}`);
+      renderError('english-output', `Translation failed: ${err.message}`);
+    }
+  }
+
+  // ── Parse ##MARKER## sections ──
+  function parseSections(text) {
+    const bhM = text.match(/##BAIHUAN##\n?([\s\S]*?)(?=##ENGLISH##|##END##|$)/);
+    const enM = text.match(/##ENGLISH##\n?([\s\S]*?)(?=##END##|$)/);
+    return {
+      bh:     bhM ? bhM[1].trim() : '',
+      bhDone: text.includes('##ENGLISH##'),
+      en:     enM ? enM[1].trim() : '',
+      enDone: text.includes('##END##')
+    };
+  }
+
+  // ── Render helpers ──
+  function setOutput(id, text, streaming, showSpinner = false) {
+    const el = document.getElementById(id);
+    if (showSpinner) {
+      el.innerHTML = '<div class="loading-indicator"><div class="spinner"></div>翻譯中…</div>';
+      return;
+    }
+    if (!text) {
+      const ph = id === 'baihuan-output'
+        ? '白話文說明將在此顯示…'
+        : 'English translation will appear here…';
+      el.innerHTML = `<span class="placeholder">${ph}</span>`;
+      return;
+    }
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+    el.innerHTML = escaped + (streaming ? '<span class="cursor"></span>' : '');
+  }
+
+  function renderError(id, msg) {
+    document.getElementById(id).innerHTML = `<span class="error-text">⚠ ${msg}</span>`;
+  }
+
+  function setStatus(state, msg) {
+    document.getElementById('status-dot').className = `dot ${state}`;
+    document.getElementById('status-text').textContent = msg;
+  }
+
+  // ── Settings ──
+  function openSettings() {
+    document.getElementById('provider-select').value = provider;
+    document.getElementById('api-key-input').value   = apiKey;
+    renderModelOptions(provider);
+    document.getElementById('model-select').value    = model;
+    document.getElementById('style-select').value    = style;
+    updateProviderLabels(provider);
+    document.getElementById('settings-overlay').classList.add('open');
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-overlay').classList.remove('open');
+  }
+
+  function saveSettings() {
+    const k = document.getElementById('api-key-input').value.trim();
+    if (!k) { alert('請輸入有效的 API Key'); return; }
+    provider = document.getElementById('provider-select').value;
+    apiKey   = k;
+    const selectedModel = document.getElementById('model-select').value;
+    model = selectedModel === '__custom__'
+      ? document.getElementById('custom-model-input').value.trim()
+      : selectedModel;
+    if (!model) { alert('請輸入自訂模型 ID'); return; }
+    style = document.getElementById('style-select').value;
+    localStorage.setItem('cct_provider', provider);
+    localStorage.setItem('cct_api_key',  apiKey);
+    localStorage.setItem('cct_model',    model);
+    localStorage.setItem('cct_style',    style);
+    closeSettings();
+    setStatus('ready', '設定已儲存，就緒');
+    const t = document.getElementById('input-text').value.trim();
+    if (t) translate(t);
+  }
+
+  // Click overlay to close
+  document.getElementById('settings-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeSettings();
+  });
+
+  // ⌘, / Ctrl+, → open settings
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); openSettings(); }
+  });
+</script>
+</body>
+</html>
