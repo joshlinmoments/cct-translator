@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wenyan AI — Classical Chinese Translator</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231C1B18'/><text x='16' y='23' font-family='Georgia,serif' font-size='17' fill='%23F5F2EC' text-anchor='middle'>文</text></svg>">
+  <title>Tao Seminar Translator — Classical Chinese</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231C1B18'/><text x='16' y='23' font-family='Georgia,serif' font-size='17' fill='%23F5F2EC' text-anchor='middle'>道</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,6 +35,8 @@
 
       --sans:  'Plus Jakarta Sans', -apple-system, 'Helvetica Neue', sans-serif;
       --serif: 'Hiragino Mincho ProN', 'Songti SC', 'Noto Serif TC', Georgia, serif;
+
+      --content-font: 16px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -206,7 +208,7 @@
       outline: none;
       resize: none;
       padding: 22px 20px;
-      font-size: 20px;
+      font-size: var(--content-font);
       line-height: 1.9;
       font-family: var(--serif);
       background: var(--panel);
@@ -238,7 +240,7 @@
 
     .output-content {
       padding: 22px 20px;
-      font-size: 16px;
+      font-size: var(--content-font);
       line-height: 2;
       white-space: pre-wrap;
       word-break: normal;
@@ -251,7 +253,7 @@
 
     #english-output {
       font-family: var(--sans);
-      font-size: 15px;
+      font-size: var(--content-font);
       line-height: 1.85;
       letter-spacing: 0;
       font-weight: 400;
@@ -492,6 +494,48 @@
     /* ── Panel visibility ── */
     .panel.hidden { display: none; }
 
+    /* ── Font size control ── */
+    .font-size-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: 8px;
+      padding-left: 12px;
+      border-left: 1px solid var(--border);
+    }
+
+    .fs-label-sm { font-size: 10px; color: var(--text-3); font-weight: 600; user-select: none; line-height: 1; }
+    .fs-label-lg { font-size: 14px; color: var(--text-3); font-weight: 600; user-select: none; line-height: 1; }
+
+    #font-size-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 68px;
+      height: 3px;
+      background: rgba(40,30,20,0.14);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    #font-size-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--panel);
+      box-shadow: 0 1px 3px rgba(30,20,10,0.20);
+      transition: background 0.15s;
+    }
+    #font-size-slider::-moz-range-thumb {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--panel);
+    }
+    #font-size-slider:hover::-webkit-slider-thumb { background: var(--accent-w); }
+
     /* ── Mobile responsive ── */
     @media (max-width: 767px) {
       body { height: 100dvh; }
@@ -503,11 +547,12 @@
       .settings-btn { padding: 6px 12px; font-size: 11px; }
       .panel-tabs { display: flex; }
       .panel-chips { display: none; }
+      .font-size-ctrl { display: none; }
       .main { grid-template-columns: 1fr !important; gap: 0; padding: 0; }
       .panel { display: none !important; border-radius: 0; border: none; box-shadow: none; }
       .panel.mobile-active { display: flex !important; }
-      textarea { font-size: 16px; padding: 16px 14px; }
-      .output-content { font-size: 15px; padding: 16px 14px; }
+      textarea { padding: 16px 14px; }
+      .output-content { padding: 16px 14px; }
       .statusbar { padding: 0 14px; }
       .modal { width: 100%; max-width: 100vw; border-radius: 20px 20px 0 0; padding: 28px 20px; position: fixed; bottom: 0; left: 0; right: 0; }
       .overlay.open { align-items: flex-end; }
@@ -549,8 +594,8 @@
       </svg>
     </div>
     <div class="header-titles">
-      <div class="title">Wenyan AI</div>
-      <div class="subtitle">Classical Chinese Translator</div>
+      <div class="title">Tao Seminar Translator</div>
+      <div class="subtitle">Classical Chinese AI Translation</div>
     </div>
   </div>
   <div class="header-right">
@@ -640,6 +685,11 @@
     <button class="chip active" id="chip-english" onclick="togglePanel('english')">English</button>
   </div>
   <span class="char-count" id="char-count"></span>
+  <div class="font-size-ctrl">
+    <span class="fs-label-sm">A</span>
+    <input type="range" id="font-size-slider" min="13" max="26" value="16" step="1">
+    <span class="fs-label-lg">A</span>
+  </div>
 </div>
 
 <!-- Settings Modal -->
@@ -1369,6 +1419,29 @@
 
   document.addEventListener('keydown', e => {
     if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); openSettings(); }
+  });
+
+  // ── Font size slider ──
+  const slider = document.getElementById('font-size-slider');
+
+  function applyFontSize(size) {
+    document.documentElement.style.setProperty('--content-font', size + 'px');
+    const pct = ((size - 13) / (26 - 13)) * 100;
+    slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, rgba(40,30,20,0.14) ${pct}%)`;
+  }
+
+  const savedFontSize = localStorage.getItem('cct_font_size');
+  if (savedFontSize) {
+    slider.value = savedFontSize;
+    applyFontSize(parseInt(savedFontSize));
+  } else {
+    applyFontSize(16);
+  }
+
+  slider.addEventListener('input', function () {
+    const size = parseInt(this.value);
+    applyFontSize(size);
+    localStorage.setItem('cct_font_size', size);
   });
 </script>
 </body>
