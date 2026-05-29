@@ -553,9 +553,13 @@
     document.getElementById('status-text').textContent = msg;
   }
 
-  function scrollToBottom() {
+  function scrollToBottom(force = false) {
     const sc = document.getElementById('rows-scroll');
-    if (sc) sc.scrollTop = sc.scrollHeight;
+    if (!sc) return;
+    // Smart scroll: only auto-scroll if user is already near the bottom (within 160px)
+    // When force=true (new row added), always scroll regardless
+    const nearBottom = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 160;
+    if (force || nearBottom) sc.scrollTop = sc.scrollHeight;
   }
 
   // ── Init ──
@@ -620,7 +624,7 @@
         <div class="cell-text" style="color:var(--text-3);font-style:italic;font-size:13px;padding:14px 18px;">Awaiting input…</div>
       </div>`;
     container.appendChild(el);
-    scrollToBottom();
+    scrollToBottom(true); // force: new row always scrolls into view
     if (autoFocus) focusActiveRow();
     return id;
   }
@@ -910,7 +914,7 @@
       rows.push(row);
       appendBrowseRow(row, !!rd.streaming);
     }
-    scrollToBottom();
+    scrollToBottom(true); // force on initial full load
   }
 
   function appendBrowseRow(row, streaming) {
@@ -938,7 +942,8 @@
 
   function updateBrowseRow(id, rd) {
     let el = document.getElementById(`row-${id}`);
-    if (!el) {
+    const isNewRow = !el;
+    if (isNewRow) {
       const row = { id, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: 'loading' };
       rows.push(row);
       if (id >= nextId) nextId = id + 1;
@@ -956,7 +961,8 @@
         : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
     if (rd.en !== undefined && en)
       en.innerHTML = rd.en ? `<div class="cell-text english-text">${escHtml(rd.en)}</div>` : '';
-    scrollToBottom();
+    // Force scroll only when a new row first appears; streaming updates use smart scroll
+    scrollToBottom(isNewRow);
   }
 
   // ── System prompt ──
