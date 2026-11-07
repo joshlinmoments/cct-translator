@@ -620,17 +620,24 @@
   let model    = localStorage.getItem('cct_model')    || 'google/gemma-4-31b-it:free';
   let style    = localStorage.getItem('cct_style')    || 'scholarly';
 
-  // Migrate away from OpenRouter free models that were removed/deprecated upstream,
-  // which caused translate requests to hang on a non-existent model. Map any dead id
-  // to a currently-available free model so existing OpenRouter keys keep working.
-  const DEAD_MODELS = [
-    'google/gemini-2.0-flash-exp:free',
-    'deepseek/deepseek-chat-v3-0324:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'qwen/qwen-2.5-72b-instruct:free',
-  ];
-  if (DEAD_MODELS.includes(model)) {
-    model = 'google/gemma-4-31b-it:free';
+  // Migrate away from models that were removed/deprecated upstream, which caused
+  // translate requests to fail on a non-existent model. Map any dead id to a current
+  // equivalent so existing users recover automatically without touching Settings.
+  const MODEL_MIGRATIONS = {
+    // Deprecated OpenRouter free models -> current free model
+    'google/gemini-2.0-flash-exp:free': 'google/gemma-4-31b-it:free',
+    'deepseek/deepseek-chat-v3-0324:free': 'google/gemma-4-31b-it:free',
+    'meta-llama/llama-3.3-70b-instruct:free': 'google/gemma-4-31b-it:free',
+    'qwen/qwen-2.5-72b-instruct:free': 'google/gemma-4-31b-it:free',
+    // Deprecated Gemini models -> current flagship Flash
+    'gemini-2.0-flash': 'gemini-3.8-flash',
+    'gemini-2.0-flash-lite': 'gemini-3.8-flash',
+    'gemini-1.5-flash': 'gemini-3.8-flash',
+    'gemini-2.5-flash': 'gemini-3.8-flash',
+    'gemini-2.5-pro': 'gemini-3.8-flash',
+  };
+  if (MODEL_MIGRATIONS[model]) {
+    model = MODEL_MIGRATIONS[model];
     localStorage.setItem('cct_model', model);
   }
 
@@ -1475,9 +1482,9 @@
       { value: '__custom__', label: 'Custom model ID…' },
     ],
     gemini: [
-      { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (recommended)' },
-      { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (fast)' },
-      { value: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro (best quality)' },
+      { value: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash (recommended)' },
+      { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite (fastest)' },
+      { value: 'gemini-4-argon',        label: 'Gemini 4 Argon (highest quality)' },
     ],
     anthropic: [
       { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 (recommended)' },
