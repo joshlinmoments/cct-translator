@@ -27,6 +27,14 @@
       --sans:  'Plus Jakarta Sans', -apple-system, 'Helvetica Neue', sans-serif;
       --serif: 'Hiragino Mincho ProN', 'Songti SC', 'Noto Serif TC', Georgia, serif;
       --content-font: 16px;
+      /* Per-column widths (grid fr ratios) — adjustable by dragging header dividers */
+      --col-source: 1fr;
+      --col-zh: 1fr;
+      --col-en: 1fr;
+      /* Per-column font sizes — adjustable via each column header's A-/A+ */
+      --font-source: 16px;
+      --font-zh: 16px;
+      --font-en: 16px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -123,9 +131,39 @@
       padding: 11px 16px;
       display: flex; align-items: center; gap: 8px;
       border-right: 1px solid var(--border);
+      position: relative;
     }
     .col-hdr:last-child { border-right: none; }
-    .col-hdr-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px; color: var(--text-1); flex: 1; }
+    .col-hdr-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px; color: var(--text-1); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Per-column font-size stepper in each header */
+    .fs-step { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+    .fs-step button {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-2); cursor: pointer; font-family: var(--sans);
+      font-weight: 700; line-height: 1; display: flex; align-items: center;
+      justify-content: center; padding: 0; transition: all 0.12s;
+    }
+    .fs-step button.fs-minus { font-size: 10px; }
+    .fs-step button.fs-plus  { font-size: 13px; }
+    .fs-step button:hover { color: var(--accent-w); border-color: var(--accent-w); }
+    .fs-step button:active { background: rgba(192,80,32,0.12); }
+
+    /* Draggable column divider (sits on the header's right border) */
+    .col-resizer {
+      position: absolute; top: 0; right: -4px; width: 9px; height: 100%;
+      cursor: col-resize; z-index: 5; touch-action: none;
+    }
+    .col-resizer::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); width: 2px; height: 16px;
+      border-radius: 2px; background: transparent; transition: background 0.12s;
+    }
+    .col-resizer:hover::after, .col-resizer.dragging::after { background: var(--accent-w); }
+    body.resizing-cols { cursor: col-resize; user-select: none; }
+    body.resizing-cols .rows-scroll { pointer-events: none; }
+    @media (max-width: 720px) { .col-resizer { display: none; } }
 
     .icon-wrap {
       width: 24px; height: 24px; border-radius: 6px;
@@ -149,7 +187,7 @@
     .rows-scroll::-webkit-scrollbar-thumb { background: rgba(40,30,20,0.12); border-radius: 2px; }
 
     /* ── Column visibility ── */
-    .table-hdr, .tr-row { grid-template-columns: 1fr 1fr 1fr; }
+    .table-hdr, .tr-row { grid-template-columns: var(--col-source) var(--col-zh) var(--col-en); }
 
     body.hide-source .cell-source, body.hide-source .col-hdr.hdr-source { display: none; }
     body.hide-zh     .cell-chinese, body.hide-zh     .col-hdr.hdr-zh   { display: none; }
@@ -215,12 +253,17 @@
     .chinese-text { font-family: var(--serif); }
     .english-text { font-family: var(--sans); }
 
+    /* Per-column font sizes (override the shared --content-font) */
+    .cell-source  .cell-text { font-size: var(--font-source); }
+    .cell-chinese .cell-text { font-size: var(--font-zh); }
+    .cell-english .cell-text { font-size: var(--font-en); }
+
     /* Active row textarea */
     .tr-row.active .cell-source textarea {
       width: 100%; min-height: 60px;
       border: none; outline: none; resize: none;
       padding: 14px 18px 28px;
-      font-size: var(--content-font);
+      font-size: var(--font-source);
       font-family: var(--serif); letter-spacing: 1px;
       background: transparent; color: var(--text-1);
       caret-color: var(--accent-w); line-height: 1.75;
@@ -273,7 +316,7 @@
       width: 100%; min-height: 60px;
       border: none; outline: none; resize: none;
       padding: 14px 18px 28px;
-      font-size: var(--content-font);
+      font-size: var(--font-zh);
       font-family: var(--serif); letter-spacing: 1px;
       background: transparent; color: var(--text-1);
       caret-color: var(--accent-w); line-height: 1.75; display: block;
@@ -520,6 +563,11 @@
         </div>
         <span class="col-hdr-label">Source Text</span>
         <span class="badge">Classical</span>
+        <span class="fs-step">
+          <button class="fs-minus" onclick="stepColFont('source',-1)" title="縮小本欄字">A</button>
+          <button class="fs-plus"  onclick="stepColFont('source', 1)" title="放大本欄字">A</button>
+        </span>
+        <div class="col-resizer" data-divider="source" title="拖拉調整欄寬"></div>
       </div>
       <div class="col-hdr hdr-zh">
         <div class="icon-wrap">
@@ -527,6 +575,11 @@
         </div>
         <span class="col-hdr-label">Modern Chinese</span>
         <span class="badge">Mandarin</span>
+        <span class="fs-step">
+          <button class="fs-minus" onclick="stepColFont('zh',-1)" title="縮小本欄字">A</button>
+          <button class="fs-plus"  onclick="stepColFont('zh', 1)" title="放大本欄字">A</button>
+        </span>
+        <div class="col-resizer" data-divider="zh" title="拖拉調整欄寬"></div>
       </div>
       <div class="col-hdr hdr-en">
         <div class="icon-wrap">
@@ -534,6 +587,10 @@
         </div>
         <span class="col-hdr-label">English</span>
         <span class="badge">EN</span>
+        <span class="fs-step">
+          <button class="fs-minus" onclick="stepColFont('en',-1)" title="縮小本欄字">A</button>
+          <button class="fs-plus"  onclick="stepColFont('en', 1)" title="放大本欄字">A</button>
+        </span>
       </div>
     </div>
     <div class="rows-scroll" id="rows-scroll"></div>
@@ -640,6 +697,13 @@
     model = MODEL_MIGRATIONS[model];
     localStorage.setItem('cct_model', model);
   }
+  // One-time switch to the faster, less-congested Flash-Lite as the live default.
+  // Runs once so a later deliberate choice of 3.8 Flash is not reverted.
+  if (provider === 'gemini' && model === 'gemini-3.8-flash' && !localStorage.getItem('cct_pref_flashlite')) {
+    model = 'gemini-3.5-flash-lite';
+    localStorage.setItem('cct_model', model);
+  }
+  try { localStorage.setItem('cct_pref_flashlite', '1'); } catch(e){}
 
   const FIREBASE_URL = 'https://cct-translator-default-rtdb.firebaseio.com';
   let firebaseUrl = localStorage.getItem('cct_firebase') || FIREBASE_URL;
@@ -715,6 +779,9 @@
     else applyFontSize(16);
 
     restoreColVis();
+    restoreColFonts();
+    restoreColWidths();
+    initColResizers();
   };
 
   // ── Mode ──
@@ -1482,8 +1549,8 @@
       { value: '__custom__', label: 'Custom model ID…' },
     ],
     gemini: [
-      { value: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash (recommended)' },
-      { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite (fastest)' },
+      { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite (recommended — fast & stable)' },
+      { value: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash (higher quality)' },
       { value: 'gemini-4-argon',        label: 'Gemini 4 Argon (highest quality)' },
     ],
     anthropic: [
@@ -1572,8 +1639,13 @@
 
   // ── Font size slider ──
   const slider = document.getElementById('font-size-slider');
+  const FONT_MIN = 12, FONT_MAX = 34;
+  const COLF = { source: '--font-source', zh: '--font-zh', en: '--font-en' };
+
+  // Master slider: sets every column to the same size and clears per-column tweaks
   function applyFontSize(size) {
     document.documentElement.style.setProperty('--content-font', size + 'px');
+    ['source','zh','en'].forEach(c => document.documentElement.style.setProperty(COLF[c], size + 'px'));
     const pct = ((size - 13) / (26 - 13)) * 100;
     slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, rgba(40,30,20,0.14) ${pct}%)`;
   }
@@ -1581,7 +1653,82 @@
     const size = parseInt(this.value);
     applyFontSize(size);
     localStorage.setItem('cct_font_size', size);
+    ['source','zh','en'].forEach(c => { try { localStorage.removeItem('cct_font_' + c); } catch(e){} });
   });
+
+  // ── Per-column font size (A- / A+ in each header) ──
+  function currentColFont(col) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(COLF[col]).trim();
+    return parseInt(v) || 16;
+  }
+  function stepColFont(col, delta) {
+    const size = Math.max(FONT_MIN, Math.min(FONT_MAX, currentColFont(col) + delta));
+    document.documentElement.style.setProperty(COLF[col], size + 'px');
+    try { localStorage.setItem('cct_font_' + col, size); } catch(e){}
+  }
+  function restoreColFonts() {
+    ['source','zh','en'].forEach(c => {
+      const v = localStorage.getItem('cct_font_' + c);
+      if (v) document.documentElement.style.setProperty(COLF[c], parseInt(v) + 'px');
+    });
+  }
+
+  // ── Column widths (drag the dividers in the header) ──
+  function restoreColWidths() {
+    try {
+      const s = JSON.parse(localStorage.getItem('cct_cols') || 'null');
+      if (s && s.source && s.zh && s.en) {
+        document.documentElement.style.setProperty('--col-source', s.source + 'fr');
+        document.documentElement.style.setProperty('--col-zh', s.zh + 'fr');
+        document.documentElement.style.setProperty('--col-en', s.en + 'fr');
+      }
+    } catch(e){}
+  }
+  function saveColWidths(s, z, e) {
+    try { localStorage.setItem('cct_cols', JSON.stringify({ source:+s.toFixed(2), zh:+z.toFixed(2), en:+e.toFixed(2) })); } catch(err){}
+  }
+  function initColResizers() {
+    document.querySelectorAll('.col-resizer').forEach(h => h.addEventListener('pointerdown', startResize));
+  }
+  function startResize(e) {
+    e.preventDefault();
+    const divider = e.currentTarget.getAttribute('data-divider'); // 'source' = source|zh, 'zh' = zh|en
+    const handle = e.currentTarget;
+    const wSrc = document.querySelector('.col-hdr.hdr-source').getBoundingClientRect().width;
+    const wZh  = document.querySelector('.col-hdr.hdr-zh').getBoundingClientRect().width;
+    const wEn  = document.querySelector('.col-hdr.hdr-en').getBoundingClientRect().width;
+    const startX = e.clientX, MIN = 90;
+    let last = [wSrc, wZh, wEn];
+
+    handle.classList.add('dragging');
+    document.body.classList.add('resizing-cols');
+    handle.setPointerCapture(e.pointerId);
+
+    function onMove(ev) {
+      let dx = ev.clientX - startX, s = wSrc, z = wZh, en = wEn;
+      if (divider === 'source') {
+        dx = Math.max(MIN - wSrc, Math.min(wZh - MIN, dx));
+        s = wSrc + dx; z = wZh - dx;
+      } else {
+        dx = Math.max(MIN - wZh, Math.min(wEn - MIN, dx));
+        z = wZh + dx; en = wEn - dx;
+      }
+      document.documentElement.style.setProperty('--col-source', s + 'fr');
+      document.documentElement.style.setProperty('--col-zh', z + 'fr');
+      document.documentElement.style.setProperty('--col-en', en + 'fr');
+      last = [s, z, en];
+    }
+    function onUp() {
+      try { handle.releasePointerCapture(e.pointerId); } catch(err){}
+      handle.classList.remove('dragging');
+      document.body.classList.remove('resizing-cols');
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      saveColWidths(last[0], last[1], last[2]);
+    }
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+  }
 </script>
 </body>
 </html>
