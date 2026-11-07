@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Tao Seminar Real-Time Translator</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231C1B18'/><text x='16' y='20' font-family='Georgia,serif' font-size='17' fill='%23F5F2EC' text-anchor='middle'>文</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,14 +44,18 @@
     /* ── Header ── */
     header {
       background: var(--panel);
-      padding: 0 20px;
-      height: 58px;
+      padding: env(safe-area-inset-top) 20px 0;
+      min-height: calc(58px + env(safe-area-inset-top));
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
       box-shadow: var(--shadow);
+    }
+    .header-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; height: 58px;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .logo-mark {
@@ -305,6 +309,30 @@
     @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
+    .retry-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin: 6px 18px 10px;
+      padding: 5px 14px; border-radius: var(--r-pill);
+      background: transparent; border: 1px solid var(--dot-error);
+      color: var(--dot-error); font-size: 11px;
+      font-family: var(--sans); font-weight: 600; cursor: pointer;
+      transition: all 0.18s;
+    }
+    .retry-btn:hover { background: rgba(192,48,48,0.08); }
+
+    .delete-btn {
+      position: absolute; top: 3px; left: 26px;
+      padding: 2px 7px;
+      border: 1px solid rgba(192,48,48,0.4);
+      border-radius: var(--r-pill);
+      background: rgba(192,48,48,0.09);
+      color: var(--dot-error);
+      font-size: 10px; font-weight: 700; font-family: var(--sans);
+      cursor: pointer; display: block; line-height: 1.4;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .delete-btn:hover { background: rgba(192,48,48,0.22); }
+
     /* ── Status bar ── */
     .statusbar {
       height: 34px; padding: 0 20px;
@@ -415,7 +443,8 @@
 
     /* ── Mobile ── */
     @media (max-width: 767px) {
-      header { height: auto; padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+      header { padding: env(safe-area-inset-top) 0 0; }
+      .header-inner { padding: 10px 14px; flex-wrap: wrap; gap: 8px; height: auto; }
       .subtitle { display: none; }
       .title { font-size: 13px; }
       .mode-btn { padding: 4px 9px; font-size: 11px; }
@@ -455,28 +484,30 @@
 <body>
 
 <header>
-  <div class="header-left">
-    <div class="logo-mark" style="font-family:Georgia,serif;font-size:19px;color:var(--panel);font-weight:400;line-height:1;">文</div>
-    <div class="header-titles">
-      <div class="title">Tao Seminar Real-Time Translator</div>
-      <div class="subtitle">Classical Chinese AI Translation</div>
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo-mark" style="font-family:Georgia,serif;font-size:19px;color:var(--panel);font-weight:400;line-height:1;">文</div>
+      <div class="header-titles">
+        <div class="title">Tao Seminar Real-Time Translator</div>
+        <div class="subtitle">Classical Chinese AI Translation</div>
+      </div>
     </div>
-  </div>
-  <div class="header-right">
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="btn-browse" onclick="setMode('browse')">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Browse
-      </button>
-      <button class="mode-btn" id="btn-edit" onclick="setMode('edit')">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-        Edit
+    <div class="header-right">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-browse" onclick="setMode('browse')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Browse
+        </button>
+        <button class="mode-btn" id="btn-edit" onclick="setMode('edit')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          Edit
+        </button>
+      </div>
+      <button class="settings-btn" onclick="openSettings()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
       </button>
     </div>
-    <button class="settings-btn" onclick="openSettings()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </button>
   </div>
 </header>
 
@@ -580,15 +611,33 @@
 </div>
 
 <script>
+  // ── Constants ──
+  const TRANSLATE_TIMEOUT_MS = 30000;
+
   // ── State ──
   let provider = localStorage.getItem('cct_provider') || 'openrouter';
   let apiKey   = localStorage.getItem('cct_api_key')  || '';
-  let model    = localStorage.getItem('cct_model')    || 'google/gemini-2.0-flash-exp:free';
+  let model    = localStorage.getItem('cct_model')    || 'google/gemma-4-31b-it:free';
   let style    = localStorage.getItem('cct_style')    || 'scholarly';
+
+  // Migrate away from OpenRouter free models that were removed/deprecated upstream,
+  // which caused translate requests to hang on a non-existent model. Map any dead id
+  // to a currently-available free model so existing OpenRouter keys keep working.
+  const DEAD_MODELS = [
+    'google/gemini-2.0-flash-exp:free',
+    'deepseek/deepseek-chat-v3-0324:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'qwen/qwen-2.5-72b-instruct:free',
+  ];
+  if (DEAD_MODELS.includes(model)) {
+    model = 'google/gemma-4-31b-it:free';
+    localStorage.setItem('cct_model', model);
+  }
 
   const FIREBASE_URL = 'https://cct-translator-default-rtdb.firebaseio.com';
   let firebaseUrl = localStorage.getItem('cct_firebase') || FIREBASE_URL;
   let fbSource = null;
+  let fbInitialLoadDone = false;
   let currentMode = 'browse';
 
   // ── Row state ──
@@ -667,6 +716,13 @@
     document.getElementById('btn-browse').classList.toggle('active', mode === 'browse');
     document.getElementById('btn-edit').classList.toggle('active', mode === 'edit');
     document.body.classList.toggle('browse-mode', mode === 'browse');
+    document.body.classList.toggle('edit-mode', mode === 'edit');
+
+    if (mode === 'edit') {
+      rows.forEach(row => { if (row.status !== 'active') attachDeleteBtn(row.id); });
+    } else {
+      document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+    }
 
     if (mode === 'edit') {
       const last = rows[rows.length - 1];
@@ -767,6 +823,8 @@
     setStatus('loading', `Row ${id}: translating…`);
 
     const abort = new AbortController();
+    let timedOut = false;
+    const timeoutId = setTimeout(() => { timedOut = true; abort.abort(); }, TRANSLATE_TIMEOUT_MS);
 
     // Renderer routes setOutput calls → row cells
     const rowRenderer = (outputId, text, streaming) => {
@@ -795,25 +853,33 @@
         await translateAnthropic(sourceText, abort.signal, onProgress, rowRenderer);
       }
 
+      clearTimeout(timeoutId);
       row.status = 'done';
       el.className = 'tr-row done';
       const sc = el.querySelector('.cell-source');
-      if (sc) sc.innerHTML = `<span class="row-num">${row.displayNum}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(sourceText)}</div>`;
+      if (sc) sc.innerHTML = srcCellHtml(id, row.displayNum, sourceText);
+      if (currentMode === 'edit') attachDeleteBtn(id);
       writeRowToFirebase(id, { source: sourceText, baihuan: row.baihuan, en: row.en, displayNum: row.displayNum, streaming: false });
       setStatus('ready', `Done`);
 
     } catch (err) {
-      if (err.name === 'AbortError') return;
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError' && !timedOut) return;
       row.status = 'error';
       el.className = 'tr-row error';
-      if (zhCell) zhCell.innerHTML = '<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Failed</div>';
-      if (enCell) enCell.innerHTML = '<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Failed</div>';
-      setStatus('error', `Error: ${err.message}`);
+      const errMsg = timedOut ? '逾時（30s）' : 'Failed';
+      const errDetail = timedOut ? 'Timed out — click Retry' : err.message;
+      if (zhCell) zhCell.innerHTML = `<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">${errMsg}</div>`;
+      if (enCell) enCell.innerHTML = `<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">
+        ${errMsg}<br><button class="retry-btn" onclick="retryRow(${id})">↻ Retry</button>
+      </div>`;
+      setStatus('error', `Error: ${errDetail}`);
     }
   }
 
   // ── Edit Modern Chinese output inline ──
   function makeZhEditable(id) {
+    if (currentMode !== 'edit') return;  // Browse-mode viewers cannot edit
     const row = rows.find(r => r.id === id);
     if (!row || row.status === 'active') return;
     const cell = document.getElementById(`zh-cell-${id}`);
@@ -872,6 +938,8 @@
     setStatus('loading', 'Updating English…');
 
     const abort = new AbortController();
+    let timedOut3 = false;
+    const timeoutId3 = setTimeout(() => { timedOut3 = true; abort.abort(); }, TRANSLATE_TIMEOUT_MS);
     try {
       await streamEnglishOnly(baihuanText, abort.signal,
         text => {
@@ -879,6 +947,7 @@
           writeRowToFirebase(id, { source: row.source, baihuan: row.baihuan, en: text, displayNum: row.displayNum, streaming: true });
         },
         finalText => {
+          clearTimeout(timeoutId3);
           row.en = finalText;
           enCell.innerHTML = `<div class="cell-text english-text">${escHtml(finalText)}</div>`;
           writeRowToFirebase(id, { source: row.source, baihuan: row.baihuan, en: finalText, displayNum: row.displayNum, streaming: false });
@@ -886,9 +955,12 @@
         }
       );
     } catch (err) {
-      if (err.name === 'AbortError') return;
-      enCell.innerHTML = `<div class="cell-text english-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">Translation failed</div>`;
-      setStatus('error', `Error: ${err.message}`);
+      clearTimeout(timeoutId3);
+      if (err.name === 'AbortError' && !timedOut3) return;
+      enCell.innerHTML = `<div class="cell-text english-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">
+        ${timedOut3 ? '逾時（30s）' : 'Failed'}<br><button class="retry-btn" onclick="retryRow(${id})">↻ Retry</button>
+      </div>`;
+      setStatus('error', `Error: ${timedOut3 ? 'Timed out' : err.message}`);
     }
   }
 
@@ -900,7 +972,7 @@
       res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://localhost', 'X-Title': 'Tao Seminar Real-Time Translator' },
-        body: JSON.stringify({ model, stream: true, max_tokens: 1024, messages: [{ role: 'system', content: sys }, { role: 'user', content: text }] }),
+        body: JSON.stringify({ model, stream: true, max_tokens: 1024, frequency_penalty: 0.5, presence_penalty: 0.3, messages: [{ role: 'system', content: sys }, { role: 'user', content: text }] }),
         signal
       });
     } else if (provider === 'gemini') {
@@ -954,6 +1026,50 @@
     onDone(full);
   }
 
+  // ── Source cell HTML helper ──
+  function srcCellHtml(id, displayNum, source) {
+    return `<span class="row-num">${displayNum}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(source)}</div>`;
+  }
+
+  function attachDeleteBtn(id) {
+    const el = document.getElementById(`row-${id}`);
+    if (!el || el.classList.contains('active') || el.querySelector('.delete-btn')) return;
+    const cell = el.querySelector('.cell-source');
+    if (!cell) return;
+    const btn = document.createElement('button');
+    btn.className = 'delete-btn';
+    btn.textContent = '× Del';
+    btn.title = 'Delete this row';
+    btn.onclick = () => deleteRow(id);
+    // Insert after the row-num span so it sits at top-left, within overflow bounds
+    const rowNum = cell.querySelector('.row-num');
+    if (rowNum) rowNum.after(btn);
+    else cell.prepend(btn);
+  }
+
+  // ── Delete row ──
+  function deleteRow(id) {
+    const idx = rows.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    if (rows[idx].status === 'active') return;
+    rows.splice(idx, 1);
+    const el = document.getElementById(`row-${id}`);
+    if (el) {
+      el.style.transition = 'opacity 0.2s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 200);
+    }
+    if (firebaseUrl) {
+      fetch(`${firebaseUrl}/rows/${id}.json`, { method: 'DELETE' }).catch(() => {});
+    }
+  }
+
+  // ── Retry failed row ──
+  function retryRow(id) {
+    const row = rows.find(r => r.id === id);
+    if (row && row.source) retranslateRow(id, row.source);
+  }
+
   // ── Edit completed row ──
   function makeRowEditable(id) {
     if (currentMode !== 'edit') return;
@@ -998,8 +1114,7 @@
     const el = document.getElementById(`row-${id}`);
     if (!el || !el.classList.contains('editing')) return;
     el.classList.remove('editing');
-    el.querySelector('.cell-source').innerHTML =
-      `<span class="row-num">${row.displayNum||id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(row.source)}</div>`;
+    el.querySelector('.cell-source').innerHTML = srcCellHtml(id, row.displayNum || id, row.source);
   }
 
   async function retranslateRow(id, newText) {
@@ -1025,6 +1140,9 @@
     setStatus('loading', `Row ${id}: re-translating…`);
 
     const abort = new AbortController();
+    let timedOut2 = false;
+    const timeoutId2 = setTimeout(() => { timedOut2 = true; abort.abort(); }, TRANSLATE_TIMEOUT_MS);
+
     const rowRenderer = (outputId, text, streaming) => {
       const cell = outputId === 'baihuan-output'
         ? document.getElementById(`zh-cell-${id}`)
@@ -1046,17 +1164,23 @@
       else if (provider === 'gemini')    await translateGemini(newText, abort.signal, onProgress, rowRenderer);
       else                               await translateAnthropic(newText, abort.signal, onProgress, rowRenderer);
 
+      clearTimeout(timeoutId2);
       row.status = 'done';
       el.className = 'tr-row done';
-      el.querySelector('.cell-source').innerHTML =
-        `<span class="row-num">${row.displayNum||id}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(newText)}</div>`;
+      el.querySelector('.cell-source').innerHTML = srcCellHtml(id, row.displayNum || id, newText);
       writeRowToFirebase(id, { source: newText, baihuan: row.baihuan, en: row.en, displayNum: row.displayNum, streaming: false });
       setStatus('ready', `Updated`);
     } catch (err) {
-      if (err.name === 'AbortError') return;
+      clearTimeout(timeoutId2);
+      if (err.name === 'AbortError' && !timedOut2) return;
       row.status = 'error';
       el.className = 'tr-row error';
-      setStatus('error', `Error: ${err.message}`);
+      const errMsg = timedOut2 ? '逾時（30s）' : 'Failed';
+      const enCell2 = document.getElementById(`en-cell-${id}`);
+      if (enCell2) enCell2.innerHTML = `<div class="cell-text" style="color:var(--dot-error);font-size:12px;font-family:var(--sans);padding:14px 18px;">
+        ${errMsg}<br><button class="retry-btn" onclick="retryRow(${id})">↻ Retry</button>
+      </div>`;
+      setStatus('error', `Error: ${timedOut2 ? 'Timed out' : err.message}`);
     }
   }
 
@@ -1083,6 +1207,7 @@
 
   // ── Firebase sync (Browse + collaborative Edit) ──
   function initFirebase() {
+    fbInitialLoadDone = false;
     if (fbSource) { fbSource.close(); fbSource = null; }
     if (!firebaseUrl) return;
 
@@ -1092,11 +1217,13 @@
       try {
         const { path, data } = JSON.parse(e.data);
         if (!data) return;
+        const isInitial = !fbInitialLoadDone;
+        fbInitialLoadDone = true;
         if (path && path.length > 1) {
           const id = parseInt(path.slice(1));
           if (!isNaN(id)) mergeRemoteRow(id, data);
         } else {
-          renderBrowseAll(data);
+          renderBrowseAll(data, isInitial);
         }
         setStatus('ready', 'Live');
       } catch (_) {}
@@ -1126,7 +1253,7 @@
     updateBrowseRow(id, rd);
   }
 
-  function renderBrowseAll(data) {
+  function renderBrowseAll(data, isInitial = false) {
     const entries = Object.entries(data).sort(([a],[b]) => parseInt(a) - parseInt(b));
 
     if (currentMode === 'edit') {
@@ -1135,7 +1262,7 @@
         const id = parseInt(key);
         const localRow = rows.find(r => r.id === id);
         if (localRow && localRow.status === 'active') continue;
-        updateBrowseRow(id, rd);
+        updateBrowseRow(id, rd, isInitial);
       }
       return;
     }
@@ -1143,61 +1270,76 @@
     // Browse mode: full replace
     const container = document.getElementById('rows-scroll');
     container.innerHTML = ''; rows = []; displayCounter = 1;
+    let maxDisplay = 0;
     for (const [key, rd] of entries) {
       const id = parseInt(key);
       const displayNum = rd.displayNum || displayCounter++;
-      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: rd.streaming ? 'loading' : 'done' };
+      if (displayNum > maxDisplay) maxDisplay = displayNum;
+      // stale = row was left streaming in a previous session
+      const stale = isInitial && !!rd.streaming;
+      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: stale ? 'error' : (rd.streaming ? 'loading' : 'done') };
       rows.push(row);
-      appendBrowseRow(row, !!rd.streaming);
+      appendBrowseRow(row, !stale && !!rd.streaming, stale);
     }
+    if (maxDisplay >= displayCounter) displayCounter = maxDisplay + 1;
     scrollToBottom(true);
   }
 
-  function appendBrowseRow(row, streaming) {
+  function appendBrowseRow(row, streaming, stale = false) {
     const container = document.getElementById('rows-scroll');
     const el = document.createElement('div');
     el.id = `row-${row.id}`;
-    el.className = `tr-row ${streaming ? 'loading' : 'done'}`;
+    el.className = `tr-row ${stale ? 'error' : (streaming ? 'loading' : 'done')}`;
     el.innerHTML = `
       <div class="cell cell-source" data-label="Source">
-        <span class="row-num">${row.displayNum||row.id}</span>
-        <div class="cell-text source-text" onclick="makeRowEditable(${row.id})" title="Click to edit">${escHtml(row.source)}</div>
+        ${srcCellHtml(row.id, row.displayNum || row.id, row.source)}
       </div>
       <div class="cell cell-chinese" id="zh-cell-${row.id}" data-label="Modern Chinese">
-        ${row.baihuan
-          ? `<div class="cell-text chinese-text"${!streaming ? ` onclick="makeZhEditable(${row.id})" title="Click to edit"` : ''}>${escHtml(row.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
-          : '<div class="cell-spinner"><div class="row-spinner"></div></div>'}
+        ${stale
+          ? `<div class="cell-text" style="color:var(--text-3);font-size:13px;font-family:var(--sans);padding:14px 18px;">上次未完成<br><button class="retry-btn" onclick="retryRow(${row.id})">↻ Retry</button></div>`
+          : (row.baihuan
+            ? `<div class="cell-text chinese-text"${!streaming ? ` onclick="makeZhEditable(${row.id})" title="Click to edit"` : ''}>${escHtml(row.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
+            : '<div class="cell-spinner"><div class="row-spinner"></div></div>')}
       </div>
       <div class="cell cell-english" id="en-cell-${row.id}" data-label="English">
-        ${row.en
-          ? `<div class="cell-text english-text">${escHtml(row.en)}</div>`
-          : (streaming ? '' : '')}
+        ${stale
+          ? `<div class="cell-text" style="color:var(--text-3);font-size:13px;padding:14px 18px;">—</div>`
+          : (row.en
+            ? `<div class="cell-text english-text">${escHtml(row.en)}</div>`
+            : (streaming ? '' : ''))}
       </div>`;
     container.appendChild(el);
   }
 
-  function updateBrowseRow(id, rd) {
+  function updateBrowseRow(id, rd, isInitial = false) {
     let el = document.getElementById(`row-${id}`);
     const isNewRow = !el;
+    const stale = isInitial && !!rd.streaming;
     if (isNewRow) {
       const displayNum = rd.displayNum || displayCounter++;
-      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: rd.streaming ? 'loading' : 'done' };
+      if (displayNum >= displayCounter) displayCounter = displayNum + 1;
+      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: stale ? 'error' : (rd.streaming ? 'loading' : 'done') };
       rows.push(row);
-      appendBrowseRow(row, !!rd.streaming);
+      appendBrowseRow(row, !stale && !!rd.streaming, stale);
       el = document.getElementById(`row-${id}`);
     }
     if (!el) return;
-    const streaming = !!rd.streaming;
-    el.className = `tr-row ${streaming ? 'loading' : 'done'}`;
+    const streaming = !stale && !!rd.streaming;
+    el.className = `tr-row ${stale ? 'error' : (streaming ? 'loading' : 'done')}`;
     const zh = document.getElementById(`zh-cell-${id}`);
     const en = document.getElementById(`en-cell-${id}`);
-    if (rd.baihuan !== undefined && zh)
-      zh.innerHTML = rd.baihuan
-        ? `<div class="cell-text chinese-text"${!streaming ? ` onclick="makeZhEditable(${id})" title="Click to edit"` : ''}>${escHtml(rd.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
-        : '<div class="cell-spinner"><div class="row-spinner"></div></div>';
-    if (rd.en !== undefined && en)
-      en.innerHTML = rd.en ? `<div class="cell-text english-text">${escHtml(rd.en)}</div>` : '';
-    // Force scroll only when a new row first appears; streaming updates use smart scroll
+    if (rd.baihuan !== undefined && zh) {
+      zh.innerHTML = stale
+        ? `<div class="cell-text" style="color:var(--text-3);font-size:13px;font-family:var(--sans);padding:14px 18px;">上次未完成<br><button class="retry-btn" onclick="retryRow(${id})">↻ Retry</button></div>`
+        : (rd.baihuan
+          ? `<div class="cell-text chinese-text"${!streaming ? ` onclick="makeZhEditable(${id})" title="Click to edit"` : ''}>${escHtml(rd.baihuan)}${streaming ? '<span class="streaming-cursor"></span>' : ''}</div>`
+          : '<div class="cell-spinner"><div class="row-spinner"></div></div>');
+    }
+    if (rd.en !== undefined && en) {
+      en.innerHTML = stale
+        ? `<div class="cell-text" style="color:var(--text-3);font-size:13px;padding:14px 18px;">—</div>`
+        : (rd.en ? `<div class="cell-text english-text">${escHtml(rd.en)}</div>` : '');
+    }
     scrollToBottom(isNewRow);
   }
 
@@ -1312,7 +1454,7 @@
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://localhost', 'X-Title': 'Tao Seminar Real-Time Translator' },
-      body: JSON.stringify({ model, stream: true, max_tokens: 2048, messages: [{ role: 'system', content: buildSystemPrompt() }, { role: 'user', content: text }] }),
+      body: JSON.stringify({ model, stream: true, max_tokens: 2048, frequency_penalty: 0.5, presence_penalty: 0.3, messages: [{ role: 'system', content: buildSystemPrompt() }, { role: 'user', content: text }] }),
       signal
     });
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
@@ -1326,9 +1468,10 @@
   // ── Settings ──
   const MODELS = {
     openrouter: [
-      { value: 'deepseek/deepseek-chat-v3-0324:free', label: 'DeepSeek V3 (free — best for Chinese)' },
-      { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (free)' },
-      { value: 'qwen/qwen-2.5-72b-instruct:free', label: 'Qwen 2.5 72B (free — good Chinese)' },
+      { value: 'xingchen-agi/xing4.0-29b-a4b:free', label: 'Xing 4.0 29B (free — strong Chinese)' },
+      { value: 'google/gemma-4-31b-it:free', label: 'Gemma 4 31B (free — reliable)' },
+      { value: 'google/gemma-4-26b-a4b-it:free', label: 'Gemma 4 26B (free — fast)' },
+      { value: 'nvidia/nemotron-3.5-super-vl:free', label: 'Nemotron 3.5 Super (free — large)' },
       { value: '__custom__', label: 'Custom model ID…' },
     ],
     gemini: [
