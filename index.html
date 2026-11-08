@@ -35,6 +35,8 @@
       --font-source: 16px;
       --font-zh: 16px;
       --font-en: 16px;
+      /* Width of the leftmost per-row control column (edit mode) */
+      --col-ctrl: 46px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -125,6 +127,7 @@
       background: var(--hdr-bg);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      position: relative;
     }
 
     .col-hdr {
@@ -364,18 +367,54 @@
     }
     .retry-btn:hover { background: rgba(192,48,48,0.08); }
 
-    .delete-btn {
-      position: absolute; top: 5px; right: 8px; left: auto; z-index: 10;
-      padding: 2px 7px;
-      border: 1px solid rgba(192,48,48,0.4);
-      border-radius: var(--r-pill);
-      background: rgba(192,48,48,0.12);
-      color: var(--dot-error);
-      font-size: 10px; font-weight: 700; font-family: var(--sans);
-      cursor: pointer; display: none; line-height: 1.4;
-      transition: background 0.15s; white-space: nowrap;
+    /* ── Whole-row bold ── */
+    .tr-row[data-bold="1"] .cell-text { font-weight: 800; }
+    .tr-row[data-bold="1"] .cell-source textarea { font-weight: 800; }
+
+    /* ── Leftmost control column (edit mode only): B bold + × delete ── */
+    body.edit-mode .table-hdr,
+    body.edit-mode .tr-row { padding-left: var(--col-ctrl); }
+
+    .hdr-ctrl, .row-ctrl {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: var(--col-ctrl);
+      border-right: 1px solid var(--border);
+      display: none; z-index: 12;
     }
-    .delete-btn:hover { background: rgba(192,48,48,0.22); }
+    body.edit-mode .hdr-ctrl { display: block; background: var(--hdr-bg); }
+    body.edit-mode .row-ctrl {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+      background: var(--panel);
+    }
+    /* Active (typing) row has nothing to bold/delete yet — keep gutter empty */
+    .tr-row.active .row-ctrl { visibility: hidden; }
+
+    .ctrl-btn {
+      width: 26px; height: 24px; padding: 0;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--panel); cursor: pointer;
+      font-family: var(--sans); font-weight: 800; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.14s;
+    }
+    .ctrl-btn.bold-btn { font-size: 13px; color: var(--text-2); }
+    .ctrl-btn.bold-btn:hover { color: var(--accent-w); border-color: var(--accent-w); }
+    .ctrl-btn.bold-btn.on { background: var(--accent-w); color: #fff; border-color: var(--accent-w); }
+    .ctrl-btn.del-btn { font-size: 16px; color: var(--dot-error); border-color: rgba(192,48,48,0.35); }
+    .ctrl-btn.del-btn:hover { background: rgba(192,48,48,0.14); }
+
+    /* Mobile: stacked rows — control strip becomes a thin horizontal toolbar */
+    @media (max-width: 720px) {
+      body.edit-mode .table-hdr, body.edit-mode .tr-row { padding-left: 0; }
+      .hdr-ctrl { display: none !important; }
+      body.edit-mode .row-ctrl {
+        position: static; width: auto; height: auto;
+        flex-direction: row; gap: 8px; padding: 6px 12px;
+        border-right: none; border-bottom: 1px solid var(--border);
+        justify-content: flex-end;
+      }
+    }
 
     /* ── Status bar ── */
     .statusbar {
@@ -558,6 +597,7 @@
 <div class="main">
   <div class="table-wrap">
     <div class="table-hdr">
+      <div class="hdr-ctrl"></div>
       <div class="col-hdr hdr-source">
         <div class="icon-wrap">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -794,9 +834,9 @@
     document.body.classList.toggle('edit-mode', mode === 'edit');
 
     if (mode === 'edit') {
-      rows.forEach(row => { if (row.status !== 'active') attachDeleteBtn(row.id); });
+      rows.forEach(row => { if (row.status !== 'active') attachRowCtrl(row.id); });
     } else {
-      document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+      document.querySelectorAll('.row-ctrl').forEach(c => c.remove());
     }
 
     if (mode === 'edit') {
@@ -933,7 +973,7 @@
       el.className = 'tr-row done';
       const sc = el.querySelector('.cell-source');
       if (sc) sc.innerHTML = srcCellHtml(id, row.displayNum, sourceText);
-      if (currentMode === 'edit') attachDeleteBtn(id);
+      if (currentMode === 'edit') attachRowCtrl(id);
       writeRowToFirebase(id, { source: sourceText, baihuan: row.baihuan, en: row.en, displayNum: row.displayNum, streaming: false });
       setStatus('ready', `Done`);
 
@@ -1106,19 +1146,48 @@
     return `<span class="row-num">${displayNum}</span><div class="cell-text source-text" onclick="makeRowEditable(${id})" title="Click to edit">${escHtml(source)}</div>`;
   }
 
-  function attachDeleteBtn(id) {
+  // ── Leftmost per-row control column: B (bold whole row) + × (delete row) ──
+  function attachRowCtrl(id) {
     const el = document.getElementById(`row-${id}`);
-    if (!el || el.classList.contains('active') || el.querySelector('.delete-btn')) return;
-    const cell = el.querySelector('.cell-source');
-    if (!cell) return;
-    const btn = document.createElement('button');
-    btn.className = 'delete-btn';
-    btn.textContent = '× Del';
-    btn.title = 'Delete this row';
-    btn.onclick = () => deleteRow(id);
-    // Attach to the row itself so it sits at the row's top-right corner,
-    // outside the cells' overflow clipping and independent of column visibility.
-    el.appendChild(btn);
+    if (!el || el.classList.contains('active') || el.querySelector('.row-ctrl')) return;
+    const row = rows.find(r => r.id === id);
+    const isBold = row ? !!row.bold : el.dataset.bold === '1';
+    if (isBold) el.dataset.bold = '1';
+
+    const ctrl = document.createElement('div');
+    ctrl.className = 'row-ctrl';
+
+    const bold = document.createElement('button');
+    bold.className = 'ctrl-btn bold-btn' + (isBold ? ' on' : '');
+    bold.textContent = 'B';
+    bold.title = '整行粗體 (toggle bold for this whole row)';
+    bold.onclick = (e) => { e.stopPropagation(); toggleBold(id); };
+
+    const del = document.createElement('button');
+    del.className = 'ctrl-btn del-btn';
+    del.textContent = '×';
+    del.title = '刪除此列 (delete this row)';
+    del.onclick = (e) => { e.stopPropagation(); deleteRow(id); };
+
+    ctrl.appendChild(bold);
+    ctrl.appendChild(del);
+    el.appendChild(ctrl);
+  }
+
+  function toggleBold(id) {
+    const el = document.getElementById(`row-${id}`);
+    if (!el) return;
+    const row = rows.find(r => r.id === id);
+    const now = !(row ? row.bold : el.dataset.bold === '1');
+    if (row) row.bold = now;
+    if (now) el.dataset.bold = '1'; else delete el.dataset.bold;
+    const btn = el.querySelector('.bold-btn');
+    if (btn) btn.classList.toggle('on', now);
+    // Persist full row so reloads and the audience (browse mode) keep the bold
+    if (row) writeRowToFirebase(id, {
+      source: row.source, baihuan: row.baihuan, en: row.en,
+      displayNum: row.displayNum, bold: now, streaming: false
+    });
   }
 
   // ── Delete row ──
@@ -1261,6 +1330,9 @@
   // ── Firebase write (per-row) ──
   function writeRowToFirebase(id, data) {
     if (!firebaseUrl || !apiKey) return;
+    // Preserve the row's bold flag across every write unless explicitly set
+    const r = rows.find(row => row.id === id);
+    if (r && r.bold && data.bold === undefined) data.bold = true;
     fetch(`${firebaseUrl}/rows/${id}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -1351,7 +1423,7 @@
       if (displayNum > maxDisplay) maxDisplay = displayNum;
       // stale = row was left streaming in a previous session
       const stale = isInitial && !!rd.streaming;
-      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: stale ? 'error' : (rd.streaming ? 'loading' : 'done') };
+      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', bold: !!rd.bold, status: stale ? 'error' : (rd.streaming ? 'loading' : 'done') };
       rows.push(row);
       appendBrowseRow(row, !stale && !!rd.streaming, stale);
     }
@@ -1382,6 +1454,7 @@
             ? `<div class="cell-text english-text">${escHtml(row.en)}</div>`
             : (streaming ? '' : ''))}
       </div>`;
+    if (row.bold) el.dataset.bold = '1';
     container.appendChild(el);
   }
 
@@ -1392,7 +1465,7 @@
     if (isNewRow) {
       const displayNum = rd.displayNum || displayCounter++;
       if (displayNum >= displayCounter) displayCounter = displayNum + 1;
-      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', status: stale ? 'error' : (rd.streaming ? 'loading' : 'done') };
+      const row = { id, displayNum, source: rd.source||'', baihuan: rd.baihuan||'', en: rd.en||'', bold: !!rd.bold, status: stale ? 'error' : (rd.streaming ? 'loading' : 'done') };
       rows.push(row);
       appendBrowseRow(row, !stale && !!rd.streaming, stale);
       el = document.getElementById(`row-${id}`);
@@ -1400,6 +1473,16 @@
     if (!el) return;
     const streaming = !stale && !!rd.streaming;
     el.className = `tr-row ${stale ? 'error' : (streaming ? 'loading' : 'done')}`;
+    // Apply bold flag whenever this update carries it (className reset above keeps data-* intact)
+    if (rd.bold !== undefined) {
+      const lr = rows.find(r => r.id === id);
+      if (lr) lr.bold = !!rd.bold;
+      if (rd.bold) el.dataset.bold = '1'; else delete el.dataset.bold;
+      const bb = el.querySelector('.bold-btn');
+      if (bb) bb.classList.toggle('on', !!rd.bold);
+    }
+    // In edit mode, make sure restored/collaborative rows get their control column
+    if (currentMode === 'edit' && !el.classList.contains('active')) attachRowCtrl(id);
     const zh = document.getElementById(`zh-cell-${id}`);
     const en = document.getElementById(`en-cell-${id}`);
     if (rd.baihuan !== undefined && zh) {
